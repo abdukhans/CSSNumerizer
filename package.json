@@ -1,0 +1,26 @@
+{
+  "name": "cssnumerizer",
+  "version": "1.0.0",
+  "description": "Seeks to enumerate CSS selectors",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdukhans/CSSNumerizer.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/abdukhans/CSSNumerizer/issues"
+  },
+  "homepage": "https://github.com/abdukhans/CSSNumerizer#readme",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}
