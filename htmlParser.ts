@@ -41,15 +41,17 @@ class HTML_AST{
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 enum Tokenizer{
     LEFT_ANGLE ,    // '<'
-    RIGH_ANGLE,     // '>'
+    RIGHT_ANGLE,     // '>'
     CLOSE_ANGLE,    // '/>'
     CLASS_DECL,     // 'class' (ws*) '='class_name_list  
     ID_DECL ,       // 'id' (ws*) '=' id_name_list
     CLASS_NAME_LIST , // ((ws*)(alpahnum)+(ws*))+
     ID_NAME_LIST ,    //   ((ws*)(alpahnum)+(ws*))+
-    WORD     ,
+    WORD     ,       // (alphanum)+
     KEY_WORD ,      // 'class' | 'id'  | '/>' 
-    WS     ,        // ' ' 
+    WS     ,        // (' '| \t | \n )+
+    BAD_TOKEN  ,   // FOR DEBUG PURPOSES 
+
 }
 
 
@@ -71,24 +73,68 @@ function isAlphanumeric(str) {
   return /^[a-zA-Z0-9]+$/.test(str);
 }
 
-function getToken() : Tokenizer {
+
+
+function getToken()  {
+
+    getChr();
+
+    
+
+    if (chr === '<') {
+        
+
+        TOKEN =  Tokenizer.LEFT_ANGLE;
+        return;
+    }
 
     if (isAlphanumeric(chr)) {
         valStr = chr;
+    
         while (isAlphanumeric(chr)) {
-
             valStr += chr;
-            
+            getChr();
+        
+        }
+        TOKEN =  Tokenizer.WORD;
+        return;
+    }
+    
+  
+
+    
+    console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
+    if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
+
+        getChr();
+
+     
+        
+        while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
+            getChr();            
             
         }
-        return Tokenizer.WORD;
-    }else{
 
-    return Tokenizer.WORD;
-    }
+        TOKEN =  Tokenizer.WS;
+
+        return
+    }   
+
+
+
+
+
 }
 
+function TestInit(html:string) {
+    
+    htmlString = html;
 
+    lenStr = htmlString.length;
+
+
+
+}
 
 function BuildAst(html:string): HTML_AST {
 
@@ -99,15 +145,14 @@ function BuildAst(html:string): HTML_AST {
 
     var RootTagname:string ;
 
-    getChr();
+
     var rootNode:HTML_Node ;
 
-    if (chr === '<') {
-        getChr()
+
+    getToken();
+
+    if (TOKEN == Tokenizer.LEFT_ANGLE) {
         
-
-
-
         rootNode = new HTML_Node(valStr,'','') 
 
 
@@ -133,4 +178,4 @@ function BuildAst(html:string): HTML_AST {
 
 
 
-export {HTML_Node,HTML_AST}
+export {TestInit,chr,TOKEN,Tokenizer,getChr,getToken,BuildAst,HTML_Node,HTML_AST}

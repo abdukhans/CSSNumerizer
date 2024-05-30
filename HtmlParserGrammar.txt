@@ -1,0 +1,5 @@
+html <e> := 
+    (ws)* '<' (ws*) (alpahnum<e1>) (attrList<e2>) (ws*) '>' (ws*) (html<e3>{ch:= [ch,e3]})* '</'(ws*) (alpahnum<e3>{e := (e1.tag,e1.classname, )    }) (ws*)'>'
+
+
+ws  := ' ' | '\t' | '\n' 
