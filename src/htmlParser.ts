@@ -40,6 +40,7 @@ class HTML_AST{
 
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 enum Tokenizer{
+    DOCTYPE   ,     // '<!DOCTYPE>'
     LEFT_ANGLE ,    // '<'
     RIGHT_ANGLE,     // '>'
     CLOSE_ANGLE,    // '/>'
@@ -63,9 +64,12 @@ var lenStr: number = 0 ;
 var valStr:string ='';
 
 
-function getChr() {
+function getChr():string {
 
-    chr = htmlString[idx++];
+    
+    
+    return htmlString[idx++];
+
 }
 
 
@@ -75,14 +79,53 @@ function isAlphanumeric(str) {
 
 
 
-function getToken()  {
+function getToken(): void  {
 
-    getChr();
+    chr = getChr();
 
     
 
     if (chr === '<') {
         
+        
+
+        chr = getChr()
+
+        if (chr === "!") {
+            
+
+            valStr = '!';
+
+            chr = getChr();
+
+            while (isAlphanumeric(chr)) {
+                valStr += chr;
+                chr = getChr();
+            }
+
+
+            console.log("V: ",valStr);
+            
+
+            if (valStr !== "DOCTYPE") {
+                
+           
+
+                throw new Error(`Expected to find the word 'DOCTYPE'` );
+                
+            }
+            chr = getChr();
+            if(chr === '>'){
+                TOKEN = Tokenizer.DOCTYPE
+            }else{
+                
+                throw new Error(`Expected to find '>' after 'DOCTYPE'` );
+            }
+
+
+        }
+
+
 
         TOKEN =  Tokenizer.LEFT_ANGLE;
         return;
@@ -93,7 +136,7 @@ function getToken()  {
     
         while (isAlphanumeric(chr)) {
             valStr += chr;
-            getChr();
+            chr = getChr();
         
         }
         TOKEN =  Tokenizer.WORD;
@@ -103,15 +146,15 @@ function getToken()  {
   
 
     
-    console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
+    //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
     if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
 
-        getChr();
+        chr = getChr();
 
      
         
         while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
-            getChr();            
+            chr = getChr();            
             
         }
 
@@ -176,6 +219,22 @@ function BuildAst(html:string): HTML_AST {
     
 }
 
+
+
+function start(): HTML_AST{
+
+    const rootNode = new HTML_Node(valStr,'','') 
+
+    
+   
+    var ast:HTML_AST = new HTML_AST(rootNode)
+    
+    
+
+
+    return ast;
+
+} 
 
 
 export {TestInit,chr,TOKEN,Tokenizer,getChr,getToken,BuildAst,HTML_Node,HTML_AST}

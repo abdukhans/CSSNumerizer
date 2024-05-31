@@ -25,17 +25,18 @@ exports.HTML_AST = HTML_AST;
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 var Tokenizer;
 (function (Tokenizer) {
-    Tokenizer[Tokenizer["LEFT_ANGLE"] = 0] = "LEFT_ANGLE";
-    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 1] = "RIGHT_ANGLE";
-    Tokenizer[Tokenizer["CLOSE_ANGLE"] = 2] = "CLOSE_ANGLE";
-    Tokenizer[Tokenizer["CLASS_DECL"] = 3] = "CLASS_DECL";
-    Tokenizer[Tokenizer["ID_DECL"] = 4] = "ID_DECL";
-    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 5] = "CLASS_NAME_LIST";
-    Tokenizer[Tokenizer["ID_NAME_LIST"] = 6] = "ID_NAME_LIST";
-    Tokenizer[Tokenizer["WORD"] = 7] = "WORD";
-    Tokenizer[Tokenizer["KEY_WORD"] = 8] = "KEY_WORD";
-    Tokenizer[Tokenizer["WS"] = 9] = "WS";
-    Tokenizer[Tokenizer["BAD_TOKEN"] = 10] = "BAD_TOKEN";
+    Tokenizer[Tokenizer["DOCTYPE"] = 0] = "DOCTYPE";
+    Tokenizer[Tokenizer["LEFT_ANGLE"] = 1] = "LEFT_ANGLE";
+    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 2] = "RIGHT_ANGLE";
+    Tokenizer[Tokenizer["CLOSE_ANGLE"] = 3] = "CLOSE_ANGLE";
+    Tokenizer[Tokenizer["CLASS_DECL"] = 4] = "CLASS_DECL";
+    Tokenizer[Tokenizer["ID_DECL"] = 5] = "ID_DECL";
+    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 6] = "CLASS_NAME_LIST";
+    Tokenizer[Tokenizer["ID_NAME_LIST"] = 7] = "ID_NAME_LIST";
+    Tokenizer[Tokenizer["WORD"] = 8] = "WORD";
+    Tokenizer[Tokenizer["KEY_WORD"] = 9] = "KEY_WORD";
+    Tokenizer[Tokenizer["WS"] = 10] = "WS";
+    Tokenizer[Tokenizer["BAD_TOKEN"] = 11] = "BAD_TOKEN";
 })(Tokenizer || (exports.Tokenizer = Tokenizer = {}));
 var TOKEN = null;
 exports.TOKEN = TOKEN;
@@ -46,15 +47,35 @@ var idx = 0;
 var lenStr = 0;
 var valStr = '';
 function getChr() {
-    exports.chr = chr = htmlString[idx++];
+    return htmlString[idx++];
 }
 exports.getChr = getChr;
 function isAlphanumeric(str) {
     return /^[a-zA-Z0-9]+$/.test(str);
 }
 function getToken() {
-    getChr();
+    exports.chr = chr = getChr();
     if (chr === '<') {
+        exports.chr = chr = getChr();
+        if (chr === "!") {
+            valStr = '!';
+            exports.chr = chr = getChr();
+            while (isAlphanumeric(chr)) {
+                valStr += chr;
+                exports.chr = chr = getChr();
+            }
+            console.log("V: ", valStr);
+            if (valStr !== "DOCTYPE") {
+                throw new Error(`Expected to find the word 'DOCTYPE'`);
+            }
+            exports.chr = chr = getChr();
+            if (chr === '>') {
+                return Tokenizer.DOCTYPE;
+            }
+            else {
+                throw new Error(`Expected to find '>' after 'DOCTYPE'`);
+            }
+        }
         exports.TOKEN = TOKEN = Tokenizer.LEFT_ANGLE;
         return;
     }
@@ -62,16 +83,16 @@ function getToken() {
         valStr = chr;
         while (isAlphanumeric(chr)) {
             valStr += chr;
-            getChr();
+            exports.chr = chr = getChr();
         }
         exports.TOKEN = TOKEN = Tokenizer.WORD;
         return;
     }
-    console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
+    //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
     if (chr === " " || chr === "\n" || chr === "\t" || chr === '\r') {
-        getChr();
+        exports.chr = chr = getChr();
         while (chr === " " || chr === "\n" || chr === "\t" || chr === '\r') {
-            getChr();
+            exports.chr = chr = getChr();
         }
         exports.TOKEN = TOKEN = Tokenizer.WS;
         return;
@@ -96,4 +117,9 @@ function BuildAst(html) {
     return ast;
 }
 exports.BuildAst = BuildAst;
+function start() {
+    const rootNode = new HTML_Node(valStr, '', '');
+    var ast = new HTML_AST(rootNode);
+    return ast;
+}
 //# sourceMappingURL=htmlParser.js.map

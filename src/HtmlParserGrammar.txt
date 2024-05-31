@@ -1,5 +1,39 @@
-html <e> := 
-    (ws)* '<' (ws*) (alpahnum<e1>) (attrList<e2>) (ws*) '>' (ws*) (html<e3>{ch:= [ch,e3]})* '</'(ws*) (alpahnum<e3>{e := (e1.tag,e1.classname, )    }) (ws*)'>'
+start <e> := 
+    (ws*)
+    '<!DOCTYPE>'
+    (ws)* 
+        html
 
 
-ws  := ' ' | '\t' | '\n' 
+html     :=  (selfCloseTags | nonSelfCloseTags | (ws)* | alpahnum    )+
+
+nonSelfCloseTags := '<'(ws*)  nonSelfCloseTagName<e1> attrList '>'
+                            html*
+                    '<'(ws*)  nonSelfCloseTagName<e1> attrList '/>' 
+
+selfCloseTags := '<'(ws*) selfCloseTagNames attrList (ws*)('/>' | '>')
+selfCloseTagNames := 'area' | 
+                     'base' | 
+                     'br'   | 
+                     'col'  |
+                     'embed'|
+                     'hr'   |
+                     'img'  |
+                     'input'|
+                     'meta' |
+                     'link' |
+                     'source' |
+                     'track'  |
+                     'wbr'    |
+                     'command'|
+                     'keygen' |
+                     'menuitem' |
+                     'frame'   |
+
+nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
+
+attrList  := ((ws*) (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*))*
+attrName  := (alpahnum)+ / ('classname' | 'id') 
+classAttr := 'classname'
+idAttr    := 'id'
+ws        := ' ' | '\t' | '\n'  | '\r'
