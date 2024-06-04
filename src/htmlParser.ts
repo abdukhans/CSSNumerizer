@@ -40,7 +40,8 @@ class HTML_AST{
 
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 enum Tokenizer{
-    DOCTYPE   ,     // '<!DOCTYPE>'
+    DOCTYPE_P1   ,     // '<!DOCTYPE'
+    DOCTYPE_P2   ,    //  'html>' 
     LEFT_ANGLE ,    // '<'
     RIGHT_ANGLE,     // '>'
     CLOSE_ANGLE,    // '/>'
@@ -49,8 +50,8 @@ enum Tokenizer{
     CLASS_NAME_LIST , // ((ws*)(alpahnum)+(ws*))+
     ID_NAME_LIST ,    //   ((ws*)(alpahnum)+(ws*))+
     WORD     ,       // (alphanum)+
-    KEY_WORD ,      // 'class' | 'id'  | '/>' 
-    WS     ,        // (' '| \t | \n )+
+    KEY_WORD ,      // 'class' | 'id'  | '/>'  | ''
+    WS     ,        // (' '| '\t' | '\n' | '\r' )
     BAD_TOKEN  ,   // FOR DEBUG PURPOSES 
 
 }
@@ -63,6 +64,13 @@ var lenStr: number = 0 ;
 var valStr:string ='';
 
 
+
+function isWhiteSpace(chr:string):boolean {
+    
+
+    return chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r';
+}
+
 function getChr():string {
 
     
@@ -72,18 +80,24 @@ function getChr():string {
 }
 
 
-function isAlphanumeric(str) {
-  return /^[a-zA-Z0-9]+$/.test(str);
+function isAlphanumeric(str:string | undefined) {
+  return str !== null && /^[a-zA-Z0-9]+$/.test(str) ;
 }
 
 
 
+function JumpWhiteSpace(): void{
+
+    while (isWhiteSpace(chr)) {
+        chr = getChr();
+    }
+}
+
+
 function getToken(): Tokenizer  {
 
-    chr = getChr();
-
+    JumpWhiteSpace()
     
-
     if (chr === '<') {
         
         
@@ -94,59 +108,26 @@ function getToken(): Tokenizer  {
             
 
             valStr = '<!';
+            
 
             chr = getChr();
-
             while (isAlphanumeric(chr)) {
                 valStr += chr;
                 chr = getChr();
             }
-           
-
-
-
-            valStr += chr;
-            
-
-            chr = getChr()
-            while (isAlphanumeric(chr)) {
-                valStr += chr;
-                chr = getChr();
-            }
-
-            valStr += chr
-
-
-
-
-
-            
-
-            if (valStr !== "<!DOCTYPE html>") {
-                
-           
-
-                throw new Error(`Expected to find the word '!DOCTYPE html' but got ${valStr} instead` );
-                
-            }
-            // chr = getChr();
-
-           
-            if(chr === '>'){
-                
-                return Tokenizer.DOCTYPE;
+            if (valStr !== "<!DOCTYPE") {
+                throw new Error(`Expected to find the word '<!DOCTYPE' but got ${valStr} instead` );
             }else{
-                
-                throw new Error(`Expected to find '>' after 'DOCTYPE' gut got ${valStr}` );
+                return Tokenizer.DOCTYPE_P1;
             }
 
 
         }
 
+    }
 
-
-        TOKEN =  Tokenizer.LEFT_ANGLE;
-        return;
+    if (chr == 'h') {
+        
     }
 
     if (isAlphanumeric(chr)) {
@@ -165,21 +146,21 @@ function getToken(): Tokenizer  {
 
     
     //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
-    if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
+    // if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
 
-        chr = getChr();
+    //     chr = getChr();
 
      
         
-        while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
-            chr = getChr();            
+    //     while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
+    //         chr = getChr();            
             
-        }
+    //     }
 
-        TOKEN =  Tokenizer.WS;
 
-        return
-    }   
+    //     return Tokenizer.WS;
+
+    // }   
 
 
 
@@ -191,14 +172,16 @@ function TestInit(html:string) {
 
 
     TOKEN  = null;
-    chr = null; 
     idx = 0;
+   
     lenStr= 0 ;
     valStr ='';
 
     htmlString = html;
 
     lenStr = htmlString.length;
+
+    chr = getChr(); 
 
 
 

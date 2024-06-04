@@ -25,18 +25,19 @@ exports.HTML_AST = HTML_AST;
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 var Tokenizer;
 (function (Tokenizer) {
-    Tokenizer[Tokenizer["DOCTYPE"] = 0] = "DOCTYPE";
-    Tokenizer[Tokenizer["LEFT_ANGLE"] = 1] = "LEFT_ANGLE";
-    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 2] = "RIGHT_ANGLE";
-    Tokenizer[Tokenizer["CLOSE_ANGLE"] = 3] = "CLOSE_ANGLE";
-    Tokenizer[Tokenizer["CLASS_DECL"] = 4] = "CLASS_DECL";
-    Tokenizer[Tokenizer["ID_DECL"] = 5] = "ID_DECL";
-    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 6] = "CLASS_NAME_LIST";
-    Tokenizer[Tokenizer["ID_NAME_LIST"] = 7] = "ID_NAME_LIST";
-    Tokenizer[Tokenizer["WORD"] = 8] = "WORD";
-    Tokenizer[Tokenizer["KEY_WORD"] = 9] = "KEY_WORD";
-    Tokenizer[Tokenizer["WS"] = 10] = "WS";
-    Tokenizer[Tokenizer["BAD_TOKEN"] = 11] = "BAD_TOKEN";
+    Tokenizer[Tokenizer["DOCTYPE_P1"] = 0] = "DOCTYPE_P1";
+    Tokenizer[Tokenizer["DOCTYPE_P2"] = 1] = "DOCTYPE_P2";
+    Tokenizer[Tokenizer["LEFT_ANGLE"] = 2] = "LEFT_ANGLE";
+    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 3] = "RIGHT_ANGLE";
+    Tokenizer[Tokenizer["CLOSE_ANGLE"] = 4] = "CLOSE_ANGLE";
+    Tokenizer[Tokenizer["CLASS_DECL"] = 5] = "CLASS_DECL";
+    Tokenizer[Tokenizer["ID_DECL"] = 6] = "ID_DECL";
+    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 7] = "CLASS_NAME_LIST";
+    Tokenizer[Tokenizer["ID_NAME_LIST"] = 8] = "ID_NAME_LIST";
+    Tokenizer[Tokenizer["WORD"] = 9] = "WORD";
+    Tokenizer[Tokenizer["KEY_WORD"] = 10] = "KEY_WORD";
+    Tokenizer[Tokenizer["WS"] = 11] = "WS";
+    Tokenizer[Tokenizer["BAD_TOKEN"] = 12] = "BAD_TOKEN";
 })(Tokenizer || (exports.Tokenizer = Tokenizer = {}));
 var TOKEN = null;
 exports.TOKEN = TOKEN;
@@ -46,15 +47,23 @@ var htmlString = '';
 var idx = 0;
 var lenStr = 0;
 var valStr = '';
+function isWhiteSpace(chr) {
+    return chr === " " || chr === "\n" || chr === "\t" || chr === '\r';
+}
 function getChr() {
     return htmlString[idx++];
 }
 exports.getChr = getChr;
 function isAlphanumeric(str) {
-    return /^[a-zA-Z0-9]+$/.test(str);
+    return str !== null && /^[a-zA-Z0-9]+$/.test(str);
+}
+function JumpWhiteSpace() {
+    while (isWhiteSpace(chr)) {
+        exports.chr = chr = getChr();
+    }
 }
 function getToken() {
-    exports.chr = chr = getChr();
+    JumpWhiteSpace();
     if (chr === '<') {
         exports.chr = chr = getChr();
         if (chr === "!") {
@@ -64,26 +73,15 @@ function getToken() {
                 valStr += chr;
                 exports.chr = chr = getChr();
             }
-            valStr += chr;
-            exports.chr = chr = getChr();
-            while (isAlphanumeric(chr)) {
-                valStr += chr;
-                exports.chr = chr = getChr();
-            }
-            valStr += chr;
-            if (valStr !== "<!DOCTYPE html>") {
-                throw new Error(`Expected to find the word '!DOCTYPE html' but got ${valStr} instead`);
-            }
-            // chr = getChr();
-            if (chr === '>') {
-                return Tokenizer.DOCTYPE;
+            if (valStr !== "<!DOCTYPE") {
+                throw new Error(`Expected to find the word '<!DOCTYPE' but got ${valStr} instead`);
             }
             else {
-                throw new Error(`Expected to find '>' after 'DOCTYPE' gut got ${valStr}`);
+                return Tokenizer.DOCTYPE_P1;
             }
         }
-        exports.TOKEN = TOKEN = Tokenizer.LEFT_ANGLE;
-        return;
+    }
+    if (chr == 'h') {
     }
     if (isAlphanumeric(chr)) {
         valStr = chr;
@@ -95,24 +93,23 @@ function getToken() {
         return;
     }
     //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
-    if (chr === " " || chr === "\n" || chr === "\t" || chr === '\r') {
-        exports.chr = chr = getChr();
-        while (chr === " " || chr === "\n" || chr === "\t" || chr === '\r') {
-            exports.chr = chr = getChr();
-        }
-        exports.TOKEN = TOKEN = Tokenizer.WS;
-        return;
-    }
+    // if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
+    //     chr = getChr();
+    //     while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
+    //         chr = getChr();            
+    //     }
+    //     return Tokenizer.WS;
+    // }   
 }
 exports.getToken = getToken;
 function TestInit(html) {
     exports.TOKEN = TOKEN = null;
-    exports.chr = chr = null;
     idx = 0;
     lenStr = 0;
     valStr = '';
     htmlString = html;
     lenStr = htmlString.length;
+    exports.chr = chr = getChr();
 }
 exports.TestInit = TestInit;
 function BuildAst(html) {
