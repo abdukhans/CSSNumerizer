@@ -28,10 +28,22 @@ class HTML_AST{
 
     addNode(node:HTML_AST) {
         this.children.push(node);
+        node.setParent(this);
     }
 
+    addNodes(nodes:HTML_AST[]){
 
-    setParent(node:HTML_AST | undefined){
+        const len = nodes.length
+            
+        for (let idx = 0; idx < len; idx++) {
+            const node:HTML_AST = nodes[idx];
+
+            this.addNode(node);
+            
+        }
+    }
+
+    private setParent(node:HTML_AST | undefined){
         this.parent = node;
     }
 
@@ -99,9 +111,7 @@ function getToken(): Tokenizer  {
     JumpWhiteSpace()
     
     if (chr === '<') {
-        
-        
-
+    
         chr = getChr()
 
         if (chr === "!") {
@@ -116,7 +126,7 @@ function getToken(): Tokenizer  {
                 chr = getChr();
             }
             if (valStr !== "<!DOCTYPE") {
-                throw new Error(`Expected to find the word '<!DOCTYPE' but got ${valStr} instead` );
+                throw new Error(`TOKEN ERROR, Expected to find the word '<!DOCTYPE' but got ${valStr} instead` );
             }else{
                 return Tokenizer.DOCTYPE_P1;
             }
@@ -138,8 +148,8 @@ function getToken(): Tokenizer  {
             chr = getChr();
         
         }
-        TOKEN =  Tokenizer.WORD;
-        return;
+       
+        return Tokenizer.WORD;
     }
     
   
@@ -229,6 +239,25 @@ function BuildAst(html:string): HTML_AST {
 
 
 
+
+function isNotEndOfFile(){
+
+    return idx == htmlString.length
+}
+
+function html(): HTML_AST[] {
+
+
+    throw new Error('NOT IMPLEMENTED YET')
+    const rootNode = new HTML_Node(valStr,'','') 
+
+    
+   
+    var ast:HTML_AST = new HTML_AST(rootNode)
+
+    return [ast];
+    
+}
 function start(): HTML_AST{
 
     const rootNode = new HTML_Node(valStr,'','') 
@@ -236,6 +265,38 @@ function start(): HTML_AST{
     
    
     var ast:HTML_AST = new HTML_AST(rootNode)
+
+    TOKEN = getToken();
+
+
+    if( TOKEN !== Tokenizer.DOCTYPE_P1 ){
+
+        throw new Error('Syntax Error, Exected to find "DOCTYPE_P1" token')
+    }
+
+    if (chr != ' ') {
+      throw new Error('Syntax Error, Exected to find " " character')   
+    }
+
+
+    TOKEN = getToken()
+
+    if(valStr !== 'html'){
+        throw new Error('Syntax Error, Exected to find "html"  word')   
+    }
+
+    TOKEN = getToken();
+
+    if (TOKEN !== Tokenizer.RIGHT_ANGLE) {
+        throw new Error('Syntax Error, Exected to find ">"  ')       
+    }
+    
+    TOKEN = getToken();
+
+    ast.addNodes(html())
+        
+    
+
     
     
 

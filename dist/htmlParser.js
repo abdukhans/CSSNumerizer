@@ -16,6 +16,14 @@ class HTML_AST {
     }
     addNode(node) {
         this.children.push(node);
+        node.setParent(this);
+    }
+    addNodes(nodes) {
+        const len = nodes.length;
+        for (let idx = 0; idx < len; idx++) {
+            const node = nodes[idx];
+            this.addNode(node);
+        }
     }
     setParent(node) {
         this.parent = node;
@@ -74,7 +82,7 @@ function getToken() {
                 exports.chr = chr = getChr();
             }
             if (valStr !== "<!DOCTYPE") {
-                throw new Error(`Expected to find the word '<!DOCTYPE' but got ${valStr} instead`);
+                throw new Error(`TOKEN ERROR, Expected to find the word '<!DOCTYPE' but got ${valStr} instead`);
             }
             else {
                 return Tokenizer.DOCTYPE_P1;
@@ -89,8 +97,7 @@ function getToken() {
             valStr += chr;
             exports.chr = chr = getChr();
         }
-        exports.TOKEN = TOKEN = Tokenizer.WORD;
-        return;
+        return Tokenizer.WORD;
     }
     //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
     // if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
@@ -125,9 +132,35 @@ function BuildAst(html) {
     return ast;
 }
 exports.BuildAst = BuildAst;
+function isNotEndOfFile() {
+    return idx == htmlString.length;
+}
+function html() {
+    throw new Error('NOT IMPLEMENTED YET');
+    const rootNode = new HTML_Node(valStr, '', '');
+    var ast = new HTML_AST(rootNode);
+    return [ast];
+}
 function start() {
     const rootNode = new HTML_Node(valStr, '', '');
     var ast = new HTML_AST(rootNode);
+    exports.TOKEN = TOKEN = getToken();
+    if (TOKEN !== Tokenizer.DOCTYPE_P1) {
+        throw new Error('Syntax Error, Exected to find "DOCTYPE_P1" token');
+    }
+    if (chr != ' ') {
+        throw new Error('Syntax Error, Exected to find " " character');
+    }
+    exports.TOKEN = TOKEN = getToken();
+    if (valStr !== 'html') {
+        throw new Error('Syntax Error, Exected to find "html"  word');
+    }
+    exports.TOKEN = TOKEN = getToken();
+    if (TOKEN !== Tokenizer.RIGHT_ANGLE) {
+        throw new Error('Syntax Error, Exected to find ">"  ');
+    }
+    exports.TOKEN = TOKEN = getToken();
+    ast.addNodes(html());
     return ast;
 }
 //# sourceMappingURL=htmlParser.js.map

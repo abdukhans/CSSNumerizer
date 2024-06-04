@@ -1,6 +1,6 @@
 start <e> := 
     (ws*)
-    '<!DOCTYPE' (ws)+ 'html>'
+    '<!DOCTYPE' (ws)+ 'html'(ws*)'>'
     (ws)* 
         html
 
