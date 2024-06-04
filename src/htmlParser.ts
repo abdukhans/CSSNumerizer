@@ -55,7 +55,6 @@ enum Tokenizer{
 
 }
 
-
 var TOKEN:Tokenizer | undefined  = null;
 var chr:string | undefined = null; 
 var htmlString: string = '';
@@ -79,7 +78,7 @@ function isAlphanumeric(str) {
 
 
 
-function getToken(): void  {
+function getToken(): Tokenizer  {
 
     chr = getChr();
 
@@ -94,7 +93,7 @@ function getToken(): void  {
         if (chr === "!") {
             
 
-            valStr = '!';
+            valStr = '<!';
 
             chr = getChr();
 
@@ -102,24 +101,43 @@ function getToken(): void  {
                 valStr += chr;
                 chr = getChr();
             }
+           
 
 
-            console.log("V: ",valStr);
+
+            valStr += chr;
             
 
-            if (valStr !== "DOCTYPE") {
+            chr = getChr()
+            while (isAlphanumeric(chr)) {
+                valStr += chr;
+                chr = getChr();
+            }
+
+            valStr += chr
+
+
+
+
+
+            
+
+            if (valStr !== "<!DOCTYPE html>") {
                 
            
 
-                throw new Error(`Expected to find the word 'DOCTYPE'` );
+                throw new Error(`Expected to find the word '!DOCTYPE html' but got ${valStr} instead` );
                 
             }
-            chr = getChr();
+            // chr = getChr();
+
+           
             if(chr === '>'){
-                TOKEN = Tokenizer.DOCTYPE
+                
+                return Tokenizer.DOCTYPE;
             }else{
                 
-                throw new Error(`Expected to find '>' after 'DOCTYPE'` );
+                throw new Error(`Expected to find '>' after 'DOCTYPE' gut got ${valStr}` );
             }
 
 
@@ -170,7 +188,14 @@ function getToken(): void  {
 }
 
 function TestInit(html:string) {
-    
+
+
+    TOKEN  = null;
+    chr = null; 
+    idx = 0;
+    lenStr= 0 ;
+    valStr ='';
+
     htmlString = html;
 
     lenStr = htmlString.length;

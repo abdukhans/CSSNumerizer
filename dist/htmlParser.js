@@ -58,22 +58,28 @@ function getToken() {
     if (chr === '<') {
         exports.chr = chr = getChr();
         if (chr === "!") {
-            valStr = '!';
+            valStr = '<!';
             exports.chr = chr = getChr();
             while (isAlphanumeric(chr)) {
                 valStr += chr;
                 exports.chr = chr = getChr();
             }
-            console.log("V: ", valStr);
-            if (valStr !== "DOCTYPE") {
-                throw new Error(`Expected to find the word 'DOCTYPE'`);
-            }
+            valStr += chr;
             exports.chr = chr = getChr();
+            while (isAlphanumeric(chr)) {
+                valStr += chr;
+                exports.chr = chr = getChr();
+            }
+            valStr += chr;
+            if (valStr !== "<!DOCTYPE html>") {
+                throw new Error(`Expected to find the word '!DOCTYPE html' but got ${valStr} instead`);
+            }
+            // chr = getChr();
             if (chr === '>') {
                 return Tokenizer.DOCTYPE;
             }
             else {
-                throw new Error(`Expected to find '>' after 'DOCTYPE'`);
+                throw new Error(`Expected to find '>' after 'DOCTYPE' gut got ${valStr}`);
             }
         }
         exports.TOKEN = TOKEN = Tokenizer.LEFT_ANGLE;
@@ -100,6 +106,11 @@ function getToken() {
 }
 exports.getToken = getToken;
 function TestInit(html) {
+    exports.TOKEN = TOKEN = null;
+    exports.chr = chr = null;
+    idx = 0;
+    lenStr = 0;
+    valStr = '';
     htmlString = html;
     lenStr = htmlString.length;
 }
