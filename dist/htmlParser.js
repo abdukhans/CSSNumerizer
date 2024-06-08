@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HTML_AST = exports.HTML_Node = exports.BuildAst = exports.getToken = exports.getChr = exports.Tokenizer = exports.TOKEN = exports.chr = exports.TestInit = void 0;
+exports.HTML_AST = exports.HTML_Node = exports.getToken = exports.getChr = exports.TOKEN = exports.chr = exports.start = exports.TestInit = void 0;
+const tk = require("./htmlTokenizer");
+var TOKEN;
 class HTML_Node {
     constructor(tagName, className, idName) {
         this.tagName = tagName;
@@ -30,137 +32,59 @@ class HTML_AST {
     }
 }
 exports.HTML_AST = HTML_AST;
-// NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
-var Tokenizer;
-(function (Tokenizer) {
-    Tokenizer[Tokenizer["DOCTYPE_P1"] = 0] = "DOCTYPE_P1";
-    Tokenizer[Tokenizer["DOCTYPE_P2"] = 1] = "DOCTYPE_P2";
-    Tokenizer[Tokenizer["LEFT_ANGLE"] = 2] = "LEFT_ANGLE";
-    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 3] = "RIGHT_ANGLE";
-    Tokenizer[Tokenizer["CLOSE_ANGLE"] = 4] = "CLOSE_ANGLE";
-    Tokenizer[Tokenizer["CLASS_DECL"] = 5] = "CLASS_DECL";
-    Tokenizer[Tokenizer["ID_DECL"] = 6] = "ID_DECL";
-    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 7] = "CLASS_NAME_LIST";
-    Tokenizer[Tokenizer["ID_NAME_LIST"] = 8] = "ID_NAME_LIST";
-    Tokenizer[Tokenizer["WORD"] = 9] = "WORD";
-    Tokenizer[Tokenizer["KEY_WORD"] = 10] = "KEY_WORD";
-    Tokenizer[Tokenizer["WS"] = 11] = "WS";
-    Tokenizer[Tokenizer["BAD_TOKEN"] = 12] = "BAD_TOKEN";
-})(Tokenizer || (exports.Tokenizer = Tokenizer = {}));
-var TOKEN = null;
-exports.TOKEN = TOKEN;
-var chr = null;
-exports.chr = chr;
-var htmlString = '';
-var idx = 0;
-var lenStr = 0;
-var valStr = '';
-function isWhiteSpace(chr) {
-    return chr === " " || chr === "\n" || chr === "\t" || chr === '\r';
-}
-function getChr() {
-    return htmlString[idx++];
-}
-exports.getChr = getChr;
-function isAlphanumeric(str) {
-    return str !== null && /^[a-zA-Z0-9]+$/.test(str);
-}
-function JumpWhiteSpace() {
-    while (isWhiteSpace(chr)) {
-        exports.chr = chr = getChr();
-    }
-}
-function getToken() {
-    JumpWhiteSpace();
-    if (chr === '<') {
-        exports.chr = chr = getChr();
-        if (chr === "!") {
-            valStr = '<!';
-            exports.chr = chr = getChr();
-            while (isAlphanumeric(chr)) {
-                valStr += chr;
-                exports.chr = chr = getChr();
-            }
-            if (valStr !== "<!DOCTYPE") {
-                throw new Error(`TOKEN ERROR, Expected to find the word '<!DOCTYPE' but got ${valStr} instead`);
-            }
-            else {
-                return Tokenizer.DOCTYPE_P1;
-            }
-        }
-    }
-    if (chr == 'h') {
-    }
-    if (isAlphanumeric(chr)) {
-        valStr = chr;
-        while (isAlphanumeric(chr)) {
-            valStr += chr;
-            exports.chr = chr = getChr();
-        }
-        return Tokenizer.WORD;
-    }
-    //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
-    // if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
-    //     chr = getChr();
-    //     while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
-    //         chr = getChr();            
-    //     }
-    //     return Tokenizer.WS;
-    // }   
-}
-exports.getToken = getToken;
 function TestInit(html) {
-    exports.TOKEN = TOKEN = null;
-    idx = 0;
-    lenStr = 0;
-    valStr = '';
-    htmlString = html;
-    lenStr = htmlString.length;
-    exports.chr = chr = getChr();
+    tk.TestInit(html);
 }
 exports.TestInit = TestInit;
-function BuildAst(html) {
-    htmlString = html;
-    lenStr = htmlString.length;
-    var RootTagname;
-    var rootNode;
-    getToken();
-    if (TOKEN == Tokenizer.LEFT_ANGLE) {
-        rootNode = new HTML_Node(valStr, '', '');
-    }
-    var ast = new HTML_AST(rootNode);
-    return ast;
-}
-exports.BuildAst = BuildAst;
+// function BuildAst(html:string): HTML_AST {
+//     tk.TOKEN
+//     tk.htmlString = html;
+//     tk.lenStr = htmlString.length;
+//     var RootTagname:string ;
+//     var rootNode:HTML_Node ;
+//     getToken();
+//     if (TOKEN == Tokenizer.LEFT_ANGLE) {
+//         rootNode = new HTML_Node(tk.valStr,'','') 
+//     }
+//     var ast:HTML_AST = new HTML_AST(rootNode)
+//     return ast;
+// }
 function isNotEndOfFile() {
-    return idx == htmlString.length;
+    return tk.idx == tk.htmlString.length;
 }
 function html() {
     throw new Error('NOT IMPLEMENTED YET');
-    const rootNode = new HTML_Node(valStr, '', '');
+    const rootNode = new HTML_Node(tk.valStr, '', '');
     var ast = new HTML_AST(rootNode);
     return [ast];
 }
 function start() {
-    const rootNode = new HTML_Node(valStr, '', '');
+    const rootNode = new HTML_Node(tk.valStr, '', '');
     var ast = new HTML_AST(rootNode);
-    exports.TOKEN = TOKEN = getToken();
-    if (TOKEN !== Tokenizer.DOCTYPE_P1) {
+    if (tk.getToken() !== tk.Tokenizer.DOCTYPE_P1) {
         throw new Error('Syntax Error, Exected to find "DOCTYPE_P1" token');
     }
-    if (chr != ' ') {
+    if (tk.chr != ' ') {
         throw new Error('Syntax Error, Exected to find " " character');
     }
-    exports.TOKEN = TOKEN = getToken();
-    if (valStr !== 'html') {
+    exports.TOKEN = TOKEN = tk.getToken();
+    if (tk.valStr !== 'html') {
         throw new Error('Syntax Error, Exected to find "html"  word');
     }
-    exports.TOKEN = TOKEN = getToken();
-    if (TOKEN !== Tokenizer.RIGHT_ANGLE) {
+    exports.TOKEN = TOKEN = tk.getToken();
+    if (TOKEN !== tk.Tokenizer.RIGHT_ANGLE) {
         throw new Error('Syntax Error, Exected to find ">"  ');
     }
-    exports.TOKEN = TOKEN = getToken();
+    exports.TOKEN = TOKEN = tk.getToken();
     ast.addNodes(html());
     return ast;
 }
+exports.start = start;
+const chr = tk.chr;
+exports.chr = chr;
+const Tokenizer = tk.Tokenizer;
+const getChr = tk.getChr;
+exports.getChr = getChr;
+const getToken = tk.getToken;
+exports.getToken = getToken;
 //# sourceMappingURL=htmlParser.js.map

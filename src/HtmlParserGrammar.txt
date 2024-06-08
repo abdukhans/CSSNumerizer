@@ -1,6 +1,6 @@
 start <e> := 
     (ws*)
-    '<!DOCTYPE' (ws)+ 'html'(ws*)'>'
+    '<!DOCTYPE '(ws)*'html'(ws*)'>'
     (ws)* 
         html
 
@@ -8,7 +8,9 @@ start <e> :=
 html     :=  (selfCloseTags | nonSelfCloseTags | (ws)* | alpahnum    )+
 
 nonSelfCloseTags := '<'(ws*)  nonSelfCloseTagName<e1> attrList '>'
+                            (ws*)
                             html*
+                            (ws*)
                     '<'(ws*)  nonSelfCloseTagName<e1> attrList '/>' 
 
 selfCloseTags := '<'(ws*) selfCloseTagNames attrList (ws*)('/>' | '>')
@@ -32,8 +34,17 @@ selfCloseTagNames := 'area' |
 
 nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
 
-attrList  := ((ws*) (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*))*
+attrList  := (ws+) NORMAL_ATTRS [(classAttr | idAttr)]  NORMAL_ATTRS 
+
+NORMAL_ATTRS := (NORMAL_ATTR (ws*))*
+NORMAL_ATTR := attrName [(ws*)'='(ws*) attrVal](ws*)
+
+
+keyVal    := (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*)
+JustKey   := (alpahnum)+
 attrName  := (alpahnum)+ / ('classname' | 'id') 
-classAttr := 'classname'
+classAttr := 'classname' (ws*) '=' (ws*) attrVal
 idAttr    := 'id'
 ws        := ' ' | '\t' | '\n'  | '\r'
+attrVal   := '"'((ws*)alpahnum+ [(ws+) alpahnum* (ws*)])+'"'
+attrId    := ('"' (ws*) alpahnum+ (ws*) '"')
