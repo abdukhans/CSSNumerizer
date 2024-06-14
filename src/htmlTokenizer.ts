@@ -1,14 +1,12 @@
-
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 export enum Tokenizer{
     DOCTYPE_P1   ,     // '<!DOCTYPE'
-    DOCTYPE_P2   ,    //  'html>' 
     LEFT_ANGLE ,    // '<'
     RIGHT_ANGLE,    // '>'
     SELF_CLOSE_TAG , // '/>' 
-    CLOSE_TAG,    // '</'
-    EQUAL    ,    // '='
-    QUOTE    ,  // '"'
+    CLOSE_TAG      ,    // '</'
+    EQUAL          ,    // '='
+    QUOTED_WORD    ,  //  (("'" (anyChar / "'") "'") | ('"' (anyChar / '"') '"')  ) 
     CLASS_DECL,     // 'class' (ws*) '='class_name_list  
     ID_DECL ,       // 'id' (ws*) '=' id_name_list
     CLASS_NAME_LIST , // ((ws*)(alpahnum)+(ws*))+
@@ -46,7 +44,7 @@ export function getChr():string {
 
 
 export function isAlphanumeric(str:string | undefined) {
-  return str !== null && /^[a-zA-Z0-9]+$/.test(str) ;
+  return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr == '-' ;
 }
 
 
@@ -80,9 +78,10 @@ export function getToken(): Tokenizer  {
             while (isAlphanumeric(chr)) {
                 valStr += chr;
                 chr = getChr();
-            }
+            } 
 
             valStr += chr;
+            
             if (valStr !== "<!DOCTYPE ") {
                 throw new Error(`TOKEN ERROR, Expected to find the word '<!DOCTYPE ' but got ${valStr} instead` );
             }else{
@@ -92,6 +91,7 @@ export function getToken(): Tokenizer  {
 
         }else if(chr == '/')
         {
+            chr = getChr()
             return Tokenizer.CLOSE_TAG;
         }        
 
@@ -101,7 +101,7 @@ export function getToken(): Tokenizer  {
 
     
 
-    if (isAlphanumeric(chr)) {
+    if (isAlphanumeric(chr) ) {
         valStr = chr;
          
 
@@ -118,7 +118,8 @@ export function getToken(): Tokenizer  {
 
 
     if (chr == '>') {
-
+        
+        chr = getChr()
         return Tokenizer.RIGHT_ANGLE;
         
     }
@@ -130,6 +131,7 @@ export function getToken(): Tokenizer  {
  
         if (chr == '>') {
 
+            chr = getChr();
             return Tokenizer.SELF_CLOSE_TAG;
             
         }
@@ -141,14 +143,31 @@ export function getToken(): Tokenizer  {
 
     if (chr == '='){
 
+        chr = getChr();
         return Tokenizer.EQUAL
     }
 
 
-    if (chr == '"'){
-        return Tokenizer.QUOTE;
+    if (chr == '"' || chr == "'"){
+
+
+        const Quote = chr;
+
+        chr = getChr();
+        valStr = '';
+        while (chr !== Quote){
+            valStr += chr;
+            chr = getChr();
+            
+            
+
+
+        }
+        
+        chr = getChr()
+        return Tokenizer.QUOTED_WORD;
     }
-    
+     
 
 
     return Tokenizer.BAD_TOKEN;

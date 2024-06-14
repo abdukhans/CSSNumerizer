@@ -5,12 +5,10 @@ start <e> :=
         html
 
 
-html     :=  (selfCloseTags | nonSelfCloseTags | (ws)* | alpahnum    )+
-
+html     :=  (selfCloseTags | nonSelfCloseTags | (ws)* | alpahnum+    )*
+text     := (alpahnum+ | (ws*))*
 nonSelfCloseTags := '<'(ws*)  nonSelfCloseTagName<e1> attrList '>'
-                            (ws*)
-                            html*
-                            (ws*)
+                        ( text | html )+
                     '<'(ws*)  nonSelfCloseTagName<e1> attrList '/>' 
 
 selfCloseTags := '<'(ws*) selfCloseTagNames attrList (ws*)('/>' | '>')

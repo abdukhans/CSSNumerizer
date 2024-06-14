@@ -5,21 +5,20 @@ exports.TestInit = exports.getToken = exports.JumpWhiteSpace = exports.isAlphanu
 var Tokenizer;
 (function (Tokenizer) {
     Tokenizer[Tokenizer["DOCTYPE_P1"] = 0] = "DOCTYPE_P1";
-    Tokenizer[Tokenizer["DOCTYPE_P2"] = 1] = "DOCTYPE_P2";
-    Tokenizer[Tokenizer["LEFT_ANGLE"] = 2] = "LEFT_ANGLE";
-    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 3] = "RIGHT_ANGLE";
-    Tokenizer[Tokenizer["SELF_CLOSE_TAG"] = 4] = "SELF_CLOSE_TAG";
-    Tokenizer[Tokenizer["CLOSE_TAG"] = 5] = "CLOSE_TAG";
-    Tokenizer[Tokenizer["EQUAL"] = 6] = "EQUAL";
-    Tokenizer[Tokenizer["QUOTE"] = 7] = "QUOTE";
-    Tokenizer[Tokenizer["CLASS_DECL"] = 8] = "CLASS_DECL";
-    Tokenizer[Tokenizer["ID_DECL"] = 9] = "ID_DECL";
-    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 10] = "CLASS_NAME_LIST";
-    Tokenizer[Tokenizer["ID_NAME_LIST"] = 11] = "ID_NAME_LIST";
-    Tokenizer[Tokenizer["WORD"] = 12] = "WORD";
-    Tokenizer[Tokenizer["KEY_WORD"] = 13] = "KEY_WORD";
-    Tokenizer[Tokenizer["WS"] = 14] = "WS";
-    Tokenizer[Tokenizer["BAD_TOKEN"] = 15] = "BAD_TOKEN";
+    Tokenizer[Tokenizer["LEFT_ANGLE"] = 1] = "LEFT_ANGLE";
+    Tokenizer[Tokenizer["RIGHT_ANGLE"] = 2] = "RIGHT_ANGLE";
+    Tokenizer[Tokenizer["SELF_CLOSE_TAG"] = 3] = "SELF_CLOSE_TAG";
+    Tokenizer[Tokenizer["CLOSE_TAG"] = 4] = "CLOSE_TAG";
+    Tokenizer[Tokenizer["EQUAL"] = 5] = "EQUAL";
+    Tokenizer[Tokenizer["QUOTED_WORD"] = 6] = "QUOTED_WORD";
+    Tokenizer[Tokenizer["CLASS_DECL"] = 7] = "CLASS_DECL";
+    Tokenizer[Tokenizer["ID_DECL"] = 8] = "ID_DECL";
+    Tokenizer[Tokenizer["CLASS_NAME_LIST"] = 9] = "CLASS_NAME_LIST";
+    Tokenizer[Tokenizer["ID_NAME_LIST"] = 10] = "ID_NAME_LIST";
+    Tokenizer[Tokenizer["WORD"] = 11] = "WORD";
+    Tokenizer[Tokenizer["KEY_WORD"] = 12] = "KEY_WORD";
+    Tokenizer[Tokenizer["WS"] = 13] = "WS";
+    Tokenizer[Tokenizer["BAD_TOKEN"] = 14] = "BAD_TOKEN";
 })(Tokenizer || (exports.Tokenizer = Tokenizer = {}));
 exports.TOKEN = null;
 exports.chr = null;
@@ -36,7 +35,7 @@ function getChr() {
 }
 exports.getChr = getChr;
 function isAlphanumeric(str) {
-    return str !== null && /^[a-zA-Z0-9]+$/.test(str);
+    return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || exports.chr == '-';
 }
 exports.isAlphanumeric = isAlphanumeric;
 function JumpWhiteSpace() {
@@ -65,6 +64,7 @@ function getToken() {
             }
         }
         else if (exports.chr == '/') {
+            exports.chr = getChr();
             return Tokenizer.CLOSE_TAG;
         }
         return Tokenizer.LEFT_ANGLE;
@@ -79,20 +79,31 @@ function getToken() {
         return Tokenizer.WORD;
     }
     if (exports.chr == '>') {
+        exports.chr = getChr();
         return Tokenizer.RIGHT_ANGLE;
     }
     if (exports.chr == '/') {
         exports.chr = getChr();
         if (exports.chr == '>') {
+            exports.chr = getChr();
             return Tokenizer.SELF_CLOSE_TAG;
         }
         throw new Error(`TOKEN ERROR, Expected a '>' but got ${exports.chr} instead`);
     }
     if (exports.chr == '=') {
+        exports.chr = getChr();
         return Tokenizer.EQUAL;
     }
-    if (exports.chr == '"') {
-        return Tokenizer.QUOTE;
+    if (exports.chr == '"' || exports.chr == "'") {
+        const Quote = exports.chr;
+        exports.chr = getChr();
+        exports.valStr = '';
+        while (exports.chr !== Quote) {
+            exports.valStr += exports.chr;
+            exports.chr = getChr();
+        }
+        exports.chr = getChr();
+        return Tokenizer.QUOTED_WORD;
     }
     return Tokenizer.BAD_TOKEN;
     //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
