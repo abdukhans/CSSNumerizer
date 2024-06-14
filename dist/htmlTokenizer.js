@@ -99,6 +99,9 @@ function getToken() {
         exports.chr = getChr();
         exports.valStr = '';
         while (exports.chr !== Quote) {
+            if (exports.idx == exports.lenStr) {
+                throw new Error('Reached END OF FILE before quote was finished');
+            }
             exports.valStr += exports.chr;
             exports.chr = getChr();
         }

@@ -156,8 +156,17 @@ export function getToken(): Tokenizer  {
         chr = getChr();
         valStr = '';
         while (chr !== Quote){
+            
+            if (idx == lenStr) {
+                
+                throw new Error('Reached END OF FILE before quote was finished')
+            }
+
             valStr += chr;
             chr = getChr();
+
+
+    
             
             
 

@@ -1,6 +1,8 @@
 import  * as tk  from './htmlTokenizer'
 
 var TOKEN:tk.Tokenizer;
+
+
 class HTML_Node {
 
     tagName:string;
