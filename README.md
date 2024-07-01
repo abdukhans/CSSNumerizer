@@ -13,10 +13,12 @@
 
         #target > div > div:nth-child(2)> div:nth-child(4) > div > div > span > button:nth-child(1) > img
 </p>
+
+<p>
     The main difference is that it will aim to get rid of class names in the css selector, and instead opt 
     for something like this, where it uses "nth-child" notation in place. We call this process enumizering the
     css Selector. Hence the name CSSNumerizer.
-
+</p>
 ## Use Case 
 <p>
     Suppose that we are trying to do simulate a click event on a website using something like puppeteer.js. To do this
