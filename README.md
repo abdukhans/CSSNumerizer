@@ -3,10 +3,8 @@
 ## What is it?
 <p>
     This is library designed to make css selectors more generalizeable. For example suppose we have the following 
-    css selector:</p>
-
-
-<p algin = center>
+    css selector:
+    
         #target > div > div.sc-hRmvpr.dSYEIN > div.sc-cZBZkQ.fudfIh > div > div > span > button:nth-child(1) > img
 </p>
 
