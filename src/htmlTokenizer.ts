@@ -1,6 +1,6 @@
 // NOTE ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 export enum Tokenizer{
-    DOCTYPE_P1   ,     // '<!DOCTYPE'
+    DOCTYPE_P1   ,     // '<!DOCTYPE '
     LEFT_ANGLE ,    // '<'
     RIGHT_ANGLE,    // '>'
     SELF_CLOSE_TAG , // '/>' 
@@ -14,7 +14,9 @@ export enum Tokenizer{
     WORD     ,       // (alphanum)+
     KEY_WORD ,      // 'class' | 'id'  | '/>'  | ''
     WS     ,        // (' '| '\t' | '\n' | '\r' )
+    TEXT    ,      //  (alphanum)(alphanum |  ws)*
     BAD_TOKEN  ,   // FOR DEBUG PURPOSES 
+    EOF        ,
 
 }
 
@@ -36,8 +38,7 @@ export function isWhiteSpace(chr:string):boolean {
 
 export function getChr():string {
 
-    
-    
+
     return htmlString[idx++];
 
 }
@@ -51,7 +52,11 @@ export function isAlphanumeric(str:string | undefined) {
 
 export function JumpWhiteSpace(): void{
 
+
+    
+
     while (isWhiteSpace(chr)) {
+        
         chr = getChr();
     }
 }
@@ -60,24 +65,31 @@ export function JumpWhiteSpace(): void{
 export function getToken(): Tokenizer  {
 
     JumpWhiteSpace()
+
+    if(idx === lenStr + 1 ){
+
+        return Tokenizer.EOF;
+    }
+
+
+
     
     if (chr === '<') {
-    
         chr = getChr()
-
-
-
-
         if (chr === "!") {
             
-
             valStr = '<!';
-            
 
             chr = getChr();
             while (isAlphanumeric(chr)) {
                 valStr += chr;
                 chr = getChr();
+                // if (idx === lenStr ) {
+
+
+                //     return Tokenizer.EOF;
+                    
+                // }
             } 
 
             valStr += chr;
@@ -93,9 +105,7 @@ export function getToken(): Tokenizer  {
         {
             chr = getChr()
             return Tokenizer.CLOSE_TAG;
-        }        
-
-
+        }
         return Tokenizer.LEFT_ANGLE
     }
 
@@ -103,13 +113,20 @@ export function getToken(): Tokenizer  {
 
     if (isAlphanumeric(chr) ) {
         valStr = chr;
-         
-
         chr = getChr()
-        while (isAlphanumeric(chr)) {
+
+
+        // valStr = chr;
+        while (isAlphanumeric(chr)  && chr !== undefined) {
+           
             valStr += chr;
+            if(idx === lenStr){
+                return Tokenizer.WORD;
+            }  
+            
             chr = getChr();
-        
+
+           
         }
        
         return Tokenizer.WORD;
@@ -142,7 +159,6 @@ export function getToken(): Tokenizer  {
 
 
     if (chr == '='){
-
         chr = getChr();
         return Tokenizer.EQUAL
     }
@@ -163,14 +179,7 @@ export function getToken(): Tokenizer  {
             }
 
             valStr += chr;
-            chr = getChr();
-
-
-    
-            
-            
-
-
+            chr = getChr()
         }
         
         chr = getChr()
@@ -178,6 +187,8 @@ export function getToken(): Tokenizer  {
     }
      
 
+    
+    
 
     return Tokenizer.BAD_TOKEN;
 

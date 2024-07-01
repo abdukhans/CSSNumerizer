@@ -4,14 +4,14 @@ start <e> :=
     (ws)* 
         html
 
-
-html     :=  (selfCloseTags | nonSelfCloseTags | (ws)* | alpahnum+    )*
+html     :=  ( tag | (ws)* | text )*
+tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags) 
 text     := (alpahnum+ | (ws*))*
-nonSelfCloseTags := '<'(ws*)  nonSelfCloseTagName<e1> attrList '>'
-                        ( text | html )+
-                    '<'(ws*)  nonSelfCloseTagName<e1> attrList '/>' 
+nonSelfCloseTags := (ws*)  nonSelfCloseTagName<e1> attrList '>'
+                        html 
+                    '<'(ws*) nonSelfCloseTagName<e1> attrList '/>' 
 
-selfCloseTags := '<'(ws*) selfCloseTagNames attrList (ws*)('/>' | '>')
+selfCloseTags :=   selfCloseTagNames attrList 
 selfCloseTagNames := 'area' | 
                      'base' | 
                      'br'   | 
@@ -32,17 +32,18 @@ selfCloseTagNames := 'area' |
 
 nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
 
-attrList  := (ws+) NORMAL_ATTRS [(classAttr | idAttr)]  NORMAL_ATTRS 
+attrList  := (ws+) NORMAL_ATTRS [idClassAttrs]  NORMAL_ATTRS ('/>' | '>')
 
+idClassAttrs := (ws*) ((classAttr (ws*) [idAttr]) | (idAttr (ws*) [classAttr] )) (ws*)
+ 
 NORMAL_ATTRS := (NORMAL_ATTR (ws*))*
 NORMAL_ATTR := attrName [(ws*)'='(ws*) attrVal](ws*)
-
 
 keyVal    := (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*)
 JustKey   := (alpahnum)+
 attrName  := (alpahnum)+ / ('classname' | 'id') 
 classAttr := 'classname' (ws*) '=' (ws*) attrVal
-idAttr    := 'id'
+idAttr    := 'id'  (ws*) '=' (ws*) attrVal
 ws        := ' ' | '\t' | '\n'  | '\r'
-attrVal   := '"'((ws*)alpahnum+ [(ws+) alpahnum* (ws*)])+'"'
+attrVal   := '"'((ws*)alpahnum+ [(ws+) alpahnum* (ws*)])+'"' 
 attrId    := ('"' (ws*) alpahnum+ (ws*) '"')
