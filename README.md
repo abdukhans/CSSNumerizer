@@ -17,7 +17,7 @@
     for something like this, where it uses "nth-child" notation in place. We call this process enumizering the
     css Selector. Hence the name CSSNumerizer.
 
-## Use 
+## Use Case 
 <p>
     Suppose that we are trying to do simulate a click event on a website using something like puppeteer.js. To do this
     we need the css selector of the html element we want to click say for example this:
