@@ -37,8 +37,8 @@
 
 ## GOALS
 <p>
-    - This is project is desinged be as light weight as possible
-    - Minimal dependencies
-    - Reasonably fast 
-    - Easy to use API
+    - This is project is desinged be as light weight as possible <br>
+    - Minimal dependencies <br>
+    - Reasonably fast  <br>
+    - Easy to use API<br>
 </p>    
