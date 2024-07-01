@@ -33,9 +33,10 @@
     website. Then the code will fail!!!. If instead we enumerate the selector like so:
 
         #root > div:nth-child({#1}) > div:nth-child(#2) > button
+</p>
 
+<p>
     where #1 and #2 are some integer number, then, as long as the structure of the html does not change, the puppeteer code will work even if the css class names are different.  
-
 </p>
 
 ## GOALS
