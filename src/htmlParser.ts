@@ -2,7 +2,7 @@ import  * as tk  from './htmlTokenizer'
 import { ATTR_AST } from './ATTR_AST';
 
 var TOKEN:tk.Tokenizer;
-
+var TAG_STACK:string[] = [];
 
 class HTML_Node {
 
@@ -584,14 +584,23 @@ function selfCloseTags():HTML_AST{
     // is garunteed to happen
     // if we get two word tokens twice 
     // in a row
+
     
     TOKEN = tk.getToken();
+
+
+
+
 
     // if (TOKEN !== tk.Tokenizer['WORD']) {
         
     //     throw new Error('Syntax Error, Expected a new word here')
     // }
     const atterList = attrList();
+
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] && TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG' ] ) {
+        throw new Error(`Syntax Error, Expected to find to find either RIGHT_ANGLE or SELF_CLOSE_TAG but got ${tk.Tokenizer[TOKEN]} instead`)
+    }
 
     const className: string |undefined = atterList.getClassName();
     const idName   : string |undefined = atterList.getIdName();
@@ -604,11 +613,52 @@ function selfCloseTags():HTML_AST{
 
 function nonselfCloseTags():HTML_AST{
 
+    const tagName = tk.valStr;
+
+    TOKEN = tk.getToken();
+
+    const atterList = attrList();
+
+   
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+        throw new Error(`Syntax Error, Expected to find to RIGHT_ANGLE but got ${tk.Tokenizer[TOKEN]} instead`)
+    }
+
+    const className: string |undefined = atterList.getClassName();
+    const idName   : string |undefined = atterList.getIdName();
+
+    const html_ast = new HTML_AST(new HTML_Node(tagName,className,idName)) 
+
+    // TAG_STACK.push(tagName);
+
+    TOKEN = tk.getToken()
+
+    const html_sub_ast = html();
+
+    html_ast.addNodes(html_sub_ast);
+
+    if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+        throw new Error(`Syntax Error, Expected a 'CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`)
+    }
 
 
+    TOKEN  = tk.getToken();
 
+    if (!( tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN  )) {
+        
+        throw new Error(`Syntax Error, Expected to close with <${tagName}>`)
+        
+    }
+
+    TOKEN = tk.getToken();
+
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] ) {
+        throw new Error(`Syntax Error, Expected to close with <${tagName}> but could not find RIGHT_ANGLE TOKEN`)
+    }
+
+    TOKEN = tk.getToken();
     
-    return new HTML_AST(new HTML_Node('','',''));
+    return html_ast ;
 
 }
 
@@ -632,6 +682,7 @@ function tag(): HTML_AST {
         return selfCloseTags()
         
     }else{
+
         return nonselfCloseTags()
     }
 
@@ -640,7 +691,6 @@ function tag(): HTML_AST {
     
 
 
-    return new HTML_AST(new HTML_Node('','',''));
 }
 
 

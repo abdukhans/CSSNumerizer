@@ -7,9 +7,9 @@ start <e> :=
 html     :=  ( tag | (ws)* | text )*
 tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags) 
 text     := (alpahnum+ | (ws*))*
-nonSelfCloseTags := (ws*)  nonSelfCloseTagName<e1> attrList '>'
+nonSelfCloseTags := nonSelfCloseTagName<e1> attrList '>'
                         html 
-                    '<'(ws*) nonSelfCloseTagName<e1> attrList '/>' 
+                    '</'(ws*) nonSelfCloseTagName<e1> (ws*) '>' 
 
 selfCloseTags :=   selfCloseTagNames attrList 
 selfCloseTagNames := 'area' | 
