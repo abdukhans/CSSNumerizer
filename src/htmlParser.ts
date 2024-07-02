@@ -204,16 +204,15 @@ function isNotEndOfFile(){
 
 function atterVal():string{
 
-
-
-    TOKEN = tk.getToken();
-
-
     if (TOKEN !== tk.Tokenizer['QUOTED_WORD']) {
         throw new Error("Syntax Error,Expected a qouted word")        
     }
 
-    return tk.valStr;
+
+    const val = tk.valStr;
+
+    TOKEN = tk.getToken();
+    return val;
 
 
 }
@@ -231,7 +230,7 @@ function alphanum(){
 
 function atterName():string{
 
-    TOKEN = tk.getToken();
+    // TOKEN = tk.getToken();
 
     if (TOKEN == tk.Tokenizer['WORD'] ) {
 
@@ -250,7 +249,7 @@ function atterName():string{
 
 
 function className(){
-    TOKEN = tk.getToken();
+    // TOKEN = tk.getToken();
 
     if (TOKEN !== tk.Tokenizer['QUOTED_WORD']) {
 
@@ -258,17 +257,21 @@ function className(){
         
     }
 
-    return tk.valStr;
+
+    const className = tk.valStr;
+
+    TOKEN = tk.getToken();
+
+    return className;
 }
 
 
 
 
 function idName(){
-    TOKEN = tk.getToken();
+    // TOKEN = tk.getToken();
 
     if (TOKEN !== tk.Tokenizer['QUOTED_WORD']) {
-
         throw new Error("Syntax Error, Expected an ID name")
         
     }
@@ -280,19 +283,23 @@ function idName(){
 
 function NORMAL_ATTR(){
 
-    const attername = atterName() 
+
+    // const attername = atterName()    
+    // if (attername === 'classname' ||  attername === 'idname') {
+    //     return;
+    // }
+
+    // TOKEN = tk.getToken();
+
+    if (TOKEN === tk.Tokenizer['EQUAL']) {
+
+        TOKEN = tk.getToken()
 
 
-    if (attername === 'classname' ||  attername === 'idname') {
-        return;
-    }
 
-    TOKEN = tk.getToken();
-
-    if (TOKEN == tk.Tokenizer['EQUAL']) {
         atterVal();
     }else{
-        throw new Error('Syntax Error, Expected an equal sign for atterval')
+        throw new Error(`Syntax Error, Expected an equal sign for atterval  but got ${tk.Tokenizer[tk.TOKEN]}`)
     }
 
 }
@@ -301,24 +308,171 @@ function NORMAL_ATTR(){
 function NORMAL_ATTRS(){
 
 
-    const HitEOFAtter = TOKEN == tk.Tokenizer['SELF_CLOSE_TAG'] || TOKEN == tk.Tokenizer['RIGHT_ANGLE'];
+    const HitEOFAtter = () => {
+        const res = TOKEN == tk.Tokenizer['SELF_CLOSE_TAG'] || TOKEN == tk.Tokenizer['RIGHT_ANGLE'];
+        
 
-    while(!HitEOFAtter ){
-        if (tk.valStr !== "classname" && tk.valStr !== "id") {
+        console.log("HitEOFAtter " , res);
+        
+    
+        return res}
+
+    while(!(HitEOFAtter()) ){
+        
+        if (tk.valStr !== "class" && tk.valStr !== "id" && TOKEN === tk.Tokenizer['WORD']) {
+            TOKEN = tk.getToken();
             NORMAL_ATTR()
         }else{
             break;
         }
-        TOKEN = tk.getToken();
+        
     }
 }   
- 
+
+
+
+function classAttr():string {
+
+    if (TOKEN !== tk.Tokenizer['EQUAL']) {
+        throw new Error(`Syntax Error in classAtter, Expected "EQUAL" but got ${TOKEN} instead`)
+    }
+
+
+    TOKEN = tk.getToken();
+    return atterVal();
+}
+
+
+
+
+function idAttr() {
+
+     if (TOKEN !== tk.Tokenizer['EQUAL']) {
+        throw new Error(`Syntax Error in idAttr, Expected "EQUAL" but got ${TOKEN} instead`)
+    }
+
+
+    TOKEN = tk.getToken();
+    return atterVal();
+}
+
+
+function firstIdThenClass():ATTR_AST{
+
+
+    const attrList = new ATTR_AST();
+
+
+    if (TOKEN === tk.Tokenizer['EQUAL']) {
+        // TOKEN = tk.getToken();
+        const idName = idAttr();
+        attrList.setIdName(idName);
+    }else{
+        f();
+    }
+
+    NORMAL_ATTRS();
+
+
+    if (tk.valStr === 'class' && TOKEN === tk.Tokenizer['WORD']) {
+        TOKEN = tk.getToken();
+        const className = classAttr();
+        attrList.setClassName(className);
+    }
+
+
+    NORMAL_ATTRS();
+
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] &&  TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG'] ) {        
+        throw new Error(`Syntax Error, Cannot have multiple class or id tags got ${Tokenizer[TOKEN]} instread `)
+    }
+
+
+    return attrList;
+}
+
+
+
+const f = () => {throw new Error(`Syntax Error, Expected 'EQUAL' but got ${Tokenizer[TOKEN]} instead`)}
+function firstClassThenId():ATTR_AST{
+
+
+    const attrList = new ATTR_AST();
+
+
+    if (TOKEN === Tokenizer['EQUAL'] ) {
+    
+        const className = classAttr();
+
+        attrList.setClassName(className)
+        console.log(attrList);
+        
+    }else{
+        f()
+        
+    }
+     
+    if(tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD']){
+
+        console.log('R!', tk.valStr);
+        
+        NORMAL_ATTRS();
+    }
+
+
+    if (TOKEN === tk.Tokenizer['WORD'] && tk.valStr === 'id') {
+        console.log('R!', tk.valStr);
+        TOKEN = tk.getToken();
+
+        const idName = idAttr();
+
+        attrList.setIdName(idName);
+
+       
+    }
+
+    // if(tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD']){
+    NORMAL_ATTRS();
+    
+
+
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] && TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG'] ) {
+        throw new Error(`Syntax Error, Cannot have multiple class or id tags got ${Tokenizer[TOKEN]} instread `)
+    }
+
+    return attrList;
+} 
 
 function idClassAttrs():ATTR_AST{
 
     const attrList = new ATTR_AST();
 
-    if (tk.valStr === "classname") {
+    if (tk.valStr === 'class' && TOKEN === tk.Tokenizer['WORD']) {
+        TOKEN = tk.getToken();
+
+
+        if (TOKEN !== tk.Tokenizer['EQUAL'] ){
+            throw new Error("Syntax Error, Expected equal sign")
+        }
+
+
+        TOKEN = tk.getToken();
+        const classname = className();
+        attrList.setClassName(classname)
+
+    }
+
+    
+    if(tk.valStr === 'id' && TOKEN === tk.Tokenizer['WORD']){
+        TOKEN = tk.getToken();
+        const idname = idName();
+        attrList.setIdName(idname)
+
+    }
+    
+    
+    if (tk.valStr === "class" && TOKEN === tk.Tokenizer['WORD'] ) {
+        TOKEN = tk.getToken()
         const classname = className();
         attrList.setClassName(classname)
 
@@ -328,32 +482,16 @@ function idClassAttrs():ATTR_AST{
         
     }
 
-    TOKEN = tk.getToken();
     
-    if(tk.valStr === 'id'){
+    if(tk.valStr === 'id' && TOKEN === tk.Tokenizer['WORD']){
+        TOKEN = tk.getToken();
         const idname = idName();
         attrList.setIdName(idname)
 
     }
-    
-    
-    if (tk.valStr === "classname") {
-        const classname = className();
-        attrList.setClassName(classname)
 
 
-       
-
-        
-    }
-
-    TOKEN = tk.getToken();
-    
-    if(tk.valStr === 'id'){
-        const idname = idName();
-        attrList.setIdName(idname)
-
-    }
+    //TOKEN = tk.getToken();
 
 
     return attrList;
@@ -364,24 +502,36 @@ function idClassAttrs():ATTR_AST{
 
 function attrList():ATTR_AST{
     var attrList = new ATTR_AST();
-
-
-    TOKEN = tk.getToken();
+    //TOKEN = tk.getToken();
 
 
     if (TOKEN === tk.Tokenizer['RIGHT_ANGLE'] || TOKEN ===  tk.Tokenizer['SELF_CLOSE_TAG']){
+        TOKEN = tk.getToken();
         return attrList;
-    }
-
-    if (tk.valStr !== 'classname' && tk.valStr !== 'id') {
-        NORMAL_ATTRS();
+    
     }
 
 
+    //TOKEN = tk.getToken();
 
-    if (tk.valStr === 'classname' || tk.valStr === 'id') {
+
+
+    // if (tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD'] ) {
+    //     console.log('asf');
         
-        attrList = idClassAttrs();
+    //     NORMAL_ATTRS();
+    // }else{
+    //     TOKEN = tk.getToken()
+    // }
+    
+
+    NORMAL_ATTRS()
+    if (tk.valStr === 'class' && TOKEN === tk.Tokenizer['WORD']) {
+        TOKEN = tk.getToken();
+        attrList = firstClassThenId();
+    }else if(tk.valStr === 'id' && TOKEN === tk.Tokenizer['WORD']){
+        TOKEN = tk.getToken();
+        attrList = firstIdThenClass();
     }
 
     // if(tk.valStr == 'classname' ){
@@ -408,9 +558,17 @@ function attrList():ATTR_AST{
     //     const idname = idName();
     //     attrList.setIdName(idname);
     // }
-    if (tk.valStr !== 'classname' && tk.valStr !== 'id') {
-        NORMAL_ATTRS();
-    }
+    // if (tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD'] ) {
+    //     NORMAL_ATTRS();
+    // }else{
+    //     TOKEN = tk.getToken()
+    // }
+
+
+    NORMAL_ATTRS();
+    
+
+
     return attrList;
 }
 
@@ -419,9 +577,6 @@ function attrList():ATTR_AST{
 function selfCloseTags():HTML_AST{
 
     const tagName = tk.valStr
-
-
-
     
     // Note that we need to make 
     // sure that there is a space
@@ -429,17 +584,20 @@ function selfCloseTags():HTML_AST{
     // is garunteed to happen
     // if we get two word tokens twice 
     // in a row
+    
     TOKEN = tk.getToken();
 
-    if (TOKEN !== tk.Tokenizer['WORD']) {
+    // if (TOKEN !== tk.Tokenizer['WORD']) {
         
-        throw new Error('Syntax Error, Expected a new word here')
-    }
+    //     throw new Error('Syntax Error, Expected a new word here')
+    // }
     const atterList = attrList();
 
     const className: string |undefined = atterList.getClassName();
-    const idName   : string |undefined =  atterList.getIdName();
+    const idName   : string |undefined = atterList.getIdName();
 
+
+    TOKEN = tk.getToken()
     return new HTML_AST(new HTML_Node(tagName,className,idName));  
 
 }
@@ -456,7 +614,11 @@ function nonselfCloseTags():HTML_AST{
 
 function tag(): HTML_AST {
 
+
+
     TOKEN = tk.getToken();
+
+    
 
 
     if (TOKEN !== tk.Tokenizer.WORD) {
@@ -465,12 +627,12 @@ function tag(): HTML_AST {
 
     const tagName = tk.valStr;
 
-    if (SELF_CLOSE_TAG_NAMES.includes(tagName)) {
+    if (SELF_CLOSE_TAG_NAMES.includes(tagName )){
 
-        selfCloseTags()
+        return selfCloseTags()
         
     }else{
-        nonselfCloseTags()
+        return nonselfCloseTags()
     }
 
 
@@ -508,13 +670,14 @@ function html(): HTML_AST[] {
 
 
     while (true) {
-        TOKEN = tk.getToken();
 
+        // TOKEN = tk.getToken();
+
+
+         console.log(tk.Tokenizer[TOKEN]);
         if (TOKEN === tk.Tokenizer.LEFT_ANGLE) {
             lst_ast.push(tag())
-            
         }else if(TOKEN === tk.Tokenizer.WORD){
-           
             lst_ast.push(text());
             
         }else{
@@ -522,6 +685,11 @@ function html(): HTML_AST[] {
             break;
             
         }
+
+
+
+       
+        
         
 
      
@@ -566,7 +734,7 @@ function start(): HTML_AST{
     TOKEN = tk.getToken();
 
     if (TOKEN !== tk.Tokenizer.RIGHT_ANGLE) {
-        throw new Error(`Syntax Error, Exected to find ">"  but ${tk.Tokenizer[TOKEN]} `)       
+        throw new Error(`Syntax Error, Exected to find ">"  but got ${tk.Tokenizer[TOKEN]} instead `)       
     }
 
 
@@ -574,6 +742,8 @@ function start(): HTML_AST{
     const DOCTYPE_node = new HTML_Node('!DOCTYPE',null,null);
     const DOCTYPE_AST = new HTML_AST(DOCTYPE_node);
     ast.addNode(DOCTYPE_AST);
+
+    TOKEN = tk.getToken()
     ast.addNodes(html())
 
 
@@ -585,10 +755,9 @@ function start(): HTML_AST{
 const chr = tk.chr;
 
 const Tokenizer = tk.Tokenizer;
-
 const  getChr  = tk.getChr
 
 const getToken = tk.getToken
 
 
-export {TestInit,start,chr,TOKEN ,getChr,getToken,HTML_Node,HTML_AST}
+export {TestInit,start,chr,TOKEN,tk,Tokenizer ,getChr,getToken,HTML_Node,HTML_AST}

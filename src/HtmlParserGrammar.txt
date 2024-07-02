@@ -31,8 +31,10 @@ selfCloseTagNames := 'area' |
                      'frame'   |
 
 nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
+attrList  := (  ('/>' | '>')  | (ws+) NORMAL_ATTRS [ firstClassThenId | firstIdThenClass ] ('/>' | '>') ) 
 
-attrList  := (ws+) NORMAL_ATTRS [idClassAttrs]  NORMAL_ATTRS ('/>' | '>')
+firstClassThenId :=  classAttr   NORMAL_ATTRS [idAttr] NORMAL_ATTRS 
+firstIdThenClass :=  idAttr  NORMAL_ATTRS [classAttr] NORMAL_ATTRS  
 
 idClassAttrs := (ws*) ((classAttr (ws*) [idAttr]) | (idAttr (ws*) [classAttr] )) (ws*)
  
@@ -41,8 +43,8 @@ NORMAL_ATTR := attrName [(ws*)'='(ws*) attrVal](ws*)
 
 keyVal    := (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*)
 JustKey   := (alpahnum)+
-attrName  := (alpahnum)+ / ('classname' | 'id') 
-classAttr := 'classname' (ws*) '=' (ws*) attrVal
+attrName  := (alpahnum)+ / ('class' | 'id') 
+classAttr := 'class' (ws*) '=' (ws*) attrVal
 idAttr    := 'id'  (ws*) '=' (ws*) attrVal
 ws        := ' ' | '\t' | '\n'  | '\r'
 attrVal   := '"'((ws*)alpahnum+ [(ws+) alpahnum* (ws*)])+'"' 

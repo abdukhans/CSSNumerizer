@@ -65,7 +65,7 @@ function getToken() {
             }
             exports.valStr += exports.chr;
             if (exports.valStr !== "<!DOCTYPE ") {
-                throw new Error("TOKEN ERROR, Expected to find the word '<!DOCTYPE ' but got ".concat(exports.valStr, " instead"));
+                throw new Error(`TOKEN ERROR, Expected to find the word '<!DOCTYPE ' but got ${exports.valStr} instead`);
             }
             else {
                 return Tokenizer.DOCTYPE_P1;
@@ -86,7 +86,6 @@ function getToken() {
             if (exports.idx === exports.lenStr) {
                 return Tokenizer.WORD;
             }
-            console.log(exports.chr);
             exports.chr = getChr();
         }
         return Tokenizer.WORD;
@@ -101,14 +100,14 @@ function getToken() {
             exports.chr = getChr();
             return Tokenizer.SELF_CLOSE_TAG;
         }
-        throw new Error("TOKEN ERROR, Expected a '>' but got ".concat(exports.chr, " instead"));
+        throw new Error(`TOKEN ERROR, Expected a '>' but got ${exports.chr} instead`);
     }
     if (exports.chr == '=') {
         exports.chr = getChr();
         return Tokenizer.EQUAL;
     }
     if (exports.chr == '"' || exports.chr == "'") {
-        var Quote = exports.chr;
+        const Quote = exports.chr;
         exports.chr = getChr();
         exports.valStr = '';
         while (exports.chr !== Quote) {
@@ -142,3 +141,4 @@ function TestInit(html) {
     exports.chr = getChr();
 }
 exports.TestInit = TestInit;
+//# sourceMappingURL=htmlTokenizer.js.map
