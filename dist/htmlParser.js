@@ -158,7 +158,7 @@ function NORMAL_ATTR() {
 function NORMAL_ATTRS() {
     const HitEOFAtter = () => {
         const res = TOKEN == tk.Tokenizer['SELF_CLOSE_TAG'] || TOKEN == tk.Tokenizer['RIGHT_ANGLE'];
-        console.log("HitEOFAtter ", res);
+        //  //  console.log("HitEOFAtter " , res);
         return res;
     };
     while (!(HitEOFAtter())) {
@@ -213,17 +213,17 @@ function firstClassThenId() {
     if (TOKEN === Tokenizer['EQUAL']) {
         const className = classAttr();
         attrList.setClassName(className);
-        console.log(attrList);
+        //  //  console.log(attrList);
     }
     else {
         f();
     }
     if (tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD']) {
-        console.log('R!', tk.valStr);
+        //  //  console.log('R!', tk.valStr);
         NORMAL_ATTRS();
     }
     if (TOKEN === tk.Tokenizer['WORD'] && tk.valStr === 'id') {
-        console.log('R!', tk.valStr);
+        //  //  console.log('R!', tk.valStr);
         exports.TOKEN = TOKEN = tk.getToken();
         const idName = idAttr();
         attrList.setIdName(idName);
@@ -273,7 +273,7 @@ function attrList() {
     }
     //TOKEN = tk.getToken();
     // if (tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD'] ) {
-    //     console.log('asf');
+    //     //  //  console.log('asf');
     //     NORMAL_ATTRS();
     // }else{
     //     TOKEN = tk.getToken()
@@ -311,12 +311,14 @@ function attrList() {
     //     TOKEN = tk.getToken()
     // }
     NORMAL_ATTRS();
+    exports.TOKEN = TOKEN = tk.getToken();
     return attrList;
 }
 function selfCloseTags() {
     const tagName = tk.valStr;
+    // //  //  console.log(tagName);
     // Note that we need to make 
-    // sure that there is a space
+    // sure that there is a space 
     // after tag name. But this 
     // is garunteed to happen
     // if we get two word tokens twice 
@@ -326,34 +328,36 @@ function selfCloseTags() {
     //     throw new Error('Syntax Error, Expected a new word here')
     // }
     const atterList = attrList();
-    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] && TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG']) {
-        throw new Error(`Syntax Error, Expected to find to find either RIGHT_ANGLE or SELF_CLOSE_TAG but got ${tk.Tokenizer[TOKEN]} instead`);
-    }
+    // if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] && TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG' ] ) {
+    //     throw new Error(`Syntax Error, Expected to find to find either RIGHT_ANGLE or SELF_CLOSE_TAG but got ${tk.Tokenizer[TOKEN]} instead`)
+    // }
     const className = atterList.getClassName();
     const idName = atterList.getIdName();
-    exports.TOKEN = TOKEN = tk.getToken();
+    //TOKEN = tk.getToken()
     return new HTML_AST(new HTML_Node(tagName, className, idName));
 }
 function nonselfCloseTags() {
     const tagName = tk.valStr;
     exports.TOKEN = TOKEN = tk.getToken();
     const atterList = attrList();
-    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
-        throw new Error(`Syntax Error, Expected to find to RIGHT_ANGLE but got ${tk.Tokenizer[TOKEN]} instead`);
+    if (!(TOKEN === tk.Tokenizer['LEFT_ANGLE'] || TOKEN === tk.Tokenizer['WORD'] || TOKEN === tk.Tokenizer['CLOSE_TAG'])) {
+        throw new Error(`Syntax Error,  Expected to find to LEFT_ANGLE or WORD or CLOSE_TAG but got ${tk.Tokenizer[TOKEN]} instead`);
     }
+    //  //  console.log("asd f" ,tk.Tokenizer[TOKEN]);
     const className = atterList.getClassName();
     const idName = atterList.getIdName();
     const html_ast = new HTML_AST(new HTML_Node(tagName, className, idName));
     // TAG_STACK.push(tagName);
-    exports.TOKEN = TOKEN = tk.getToken();
+    // TOKEN = tk.getToken()
     const html_sub_ast = html();
     html_ast.addNodes(html_sub_ast);
-    if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
-        throw new Error(`Syntax Error, Expected a 'CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`);
-    }
+    // if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+    //     throw new Error(`Syntax Error,  Expected a 'CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`)
+    // }
+    //  //  //  console.log(`${tk.Tokenizer[TOKEN]} instead`);
     exports.TOKEN = TOKEN = tk.getToken();
     if (!(tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN)) {
-        throw new Error(`Syntax Error, Expected to close with <${tagName}>`);
+        throw new Error(`Syntax Error, Expected to close with <${tagName}> but got ${tk.Tokenizer[TOKEN]} instead`);
     }
     exports.TOKEN = TOKEN = tk.getToken();
     if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
@@ -389,7 +393,7 @@ function html() {
     const lst_ast = [];
     while (true) {
         // TOKEN = tk.getToken();
-        console.log(tk.Tokenizer[TOKEN]);
+        //  //  //  console.log("HTML: " ,tk.Tokenizer[TOKEN]);
         if (TOKEN === tk.Tokenizer.LEFT_ANGLE) {
             lst_ast.push(tag());
         }
