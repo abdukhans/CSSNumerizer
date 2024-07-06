@@ -5,7 +5,7 @@ start <e> :=
         html
 
 html     :=  ( tag | (ws)* | text )*
-tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags) 
+tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags | StyleTag | ScriptTag) 
 text     := (alpahnum+ | (ws*))*
 nonSelfCloseTags := nonSelfCloseTagName<e1> attrList 
                         html 
@@ -31,15 +31,25 @@ selfCloseTagNames := 'area' |
                      'frame'   |
 
 nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
+
+StyleTag      := ws*'style>'  whatever '</' (ws*) 'style' (ws*) '>'
+
+ScriptTag     := ws*'script>' whatever '</' (ws*) 'script' (ws*)'>'
+
+whatever      := (anyChar)* / '</'
+
 attrList  := (  ('/>' | '>')  | (ws+) NORMAL_ATTRS [ firstClassThenId | firstIdThenClass ] ('/>' | '>') ) 
 
 firstClassThenId :=  classAttr   NORMAL_ATTRS [idAttr] NORMAL_ATTRS 
 firstIdThenClass :=  idAttr  NORMAL_ATTRS [classAttr] NORMAL_ATTRS  
 
 idClassAttrs := (ws*) ((classAttr (ws*) [idAttr]) | (idAttr (ws*) [classAttr] )) (ws*)
- 
-NORMAL_ATTRS := (NORMAL_ATTR (ws*))*
-NORMAL_ATTR := attrName [(ws*)'='(ws*) attrVal](ws*)
+
+
+NORMAL_ATTRS := (NORMAL_ATTR  (ws*))*
+NORMAL_ATTR  := attrName (ws*)['='(ws*) attrVal]
+
+
 
 keyVal    := (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*)
 JustKey   := (alpahnum)+

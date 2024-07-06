@@ -151,8 +151,8 @@ function NORMAL_ATTR() {
         exports.TOKEN = TOKEN = tk.getToken();
         atterVal();
     }
-    else {
-        throw new Error(`Syntax Error, Expected an equal sign for atterval  but got ${tk.Tokenizer[tk.TOKEN]}`);
+    else if (TOKEN !== tk.Tokenizer['WORD']) {
+        throw new Error(`Syntax Error, Expected a WORD but got ${tk.Tokenizer[TOKEN]}`);
     }
 }
 function NORMAL_ATTRS() {
@@ -271,13 +271,6 @@ function attrList() {
         exports.TOKEN = TOKEN = tk.getToken();
         return attrList;
     }
-    //TOKEN = tk.getToken();
-    // if (tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD'] ) {
-    //     //  //  console.log('asf');
-    //     NORMAL_ATTRS();
-    // }else{
-    //     TOKEN = tk.getToken()
-    // }
     NORMAL_ATTRS();
     if (tk.valStr === 'class' && TOKEN === tk.Tokenizer['WORD']) {
         exports.TOKEN = TOKEN = tk.getToken();
@@ -287,29 +280,6 @@ function attrList() {
         exports.TOKEN = TOKEN = tk.getToken();
         attrList = firstIdThenClass();
     }
-    // if(tk.valStr == 'classname' ){
-    //     const classname = className();
-    //     attrList.setClassName(classname);
-    // }
-    // TOKEN = tk.getToken();
-    // if(tk.valStr == 'id'){
-    //     const idname = idName();
-    //     attrList.setIdName(idname);
-    // }
-    // TOKEN = tk.getToken();
-    // if(tk.valStr == 'classname' ){
-    //     const classname = className();
-    //     attrList.setClassName(classname);
-    // }
-    // if(tk.valStr == 'id'){
-    //     const idname = idName();
-    //     attrList.setIdName(idname);
-    // }
-    // if (tk.valStr !== 'class' && tk.valStr !== 'id' && TOKEN === tk.Tokenizer['WORD'] ) {
-    //     NORMAL_ATTRS();
-    // }else{
-    //     TOKEN = tk.getToken()
-    // }
     NORMAL_ATTRS();
     exports.TOKEN = TOKEN = tk.getToken();
     return attrList;
@@ -366,6 +336,43 @@ function nonselfCloseTags() {
     exports.TOKEN = TOKEN = tk.getToken();
     return html_ast;
 }
+function whatever() {
+    while (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+        exports.TOKEN = TOKEN = tk.getToken();
+    }
+}
+function StyleTag() {
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+        throw new Error("Syntax Error, Expected to close opening style tag with RIGHT_ANGLE");
+    }
+    exports.TOKEN = TOKEN = tk.getToken();
+    whatever();
+    exports.TOKEN = TOKEN = tk.getToken();
+    if (tk.valStr !== 'style') {
+        throw new Error(`Syntax Error, Expected to close with style tag but got ${tk.valStr} tag Name instead`);
+    }
+    exports.TOKEN = TOKEN = tk.getToken();
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+        throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with style tag but got ${tk.Tokenizer[TOKEN]} instead.`);
+    }
+    exports.TOKEN = TOKEN = tk.getToken();
+}
+function ScriptTag() {
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+        throw new Error("Syntax Error, Expected to close opening style tag with RIGHT_ANGLE");
+    }
+    exports.TOKEN = TOKEN = tk.getToken();
+    whatever();
+    exports.TOKEN = TOKEN = tk.getToken();
+    if (tk.valStr !== 'script') {
+        throw new Error(`Syntax Error, Expected to close with script tag but got ${tk.valStr} tag Name instead`);
+    }
+    exports.TOKEN = TOKEN = tk.getToken();
+    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+        throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with script tag but got ${tk.Tokenizer[TOKEN]} instead.`);
+    }
+    exports.TOKEN = TOKEN = tk.getToken();
+}
 function tag() {
     exports.TOKEN = TOKEN = tk.getToken();
     if (TOKEN !== tk.Tokenizer.WORD) {
@@ -374,6 +381,14 @@ function tag() {
     const tagName = tk.valStr;
     if (SELF_CLOSE_TAG_NAMES.includes(tagName)) {
         return selfCloseTags();
+    }
+    else if (tagName === 'script') {
+        exports.TOKEN = TOKEN = tk.getToken();
+        ScriptTag();
+    }
+    else if (tagName === 'sytle') {
+        exports.TOKEN = TOKEN = tk.getToken();
+        StyleTag();
     }
     else {
         return nonselfCloseTags();
