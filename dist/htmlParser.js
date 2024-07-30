@@ -6,6 +6,9 @@ exports.tk = tk;
 const ATTR_AST_1 = require("./ATTR_AST");
 var TOKEN;
 var TAG_STACK = [];
+var line_num = 0;
+var isSelfClose = false;
+var debugMap = {};
 class HTML_Node {
     constructor(tagName, className, idName) {
         this.tagName = tagName;
@@ -86,7 +89,8 @@ exports.TestInit = TestInit;
 //     var ast:HTML_AST = new HTML_AST(rootNode)
 //     return ast;
 // }
-const SELF_CLOSE_TAG_NAMES = ['area',
+const SELF_CLOSE_TAG_NAMES = [
+    'area',
     'base',
     'br',
     'col',
@@ -96,19 +100,24 @@ const SELF_CLOSE_TAG_NAMES = ['area',
     'input',
     'meta',
     'link',
+    'param',
     'source',
     'track',
     'wbr',
     'command',
     'keygen',
     'menuitem',
-    'frame'];
+    'frame',
+    'wbr'
+];
 function isNotEndOfFile() {
     return tk.idx == tk.htmlString.length;
 }
 function atterVal() {
-    if (TOKEN !== tk.Tokenizer['QUOTED_WORD']) {
-        throw new Error("Syntax Error,Expected a qouted word");
+    if (TOKEN === tk.Tokenizer['QUOTED_WORD']) {
+        // throw new Error("Syntax Error,Expected a qouted word")        
+    }
+    else if (TOKEN === tk.Tokenizer['WORD']) {
     }
     const val = tk.valStr;
     exports.TOKEN = TOKEN = tk.getToken();
@@ -151,17 +160,35 @@ function NORMAL_ATTR() {
         exports.TOKEN = TOKEN = tk.getToken();
         atterVal();
     }
-    else if (TOKEN !== tk.Tokenizer['WORD']) {
-        throw new Error(`Syntax Error, Expected a WORD but got ${tk.Tokenizer[TOKEN]}`);
+    else {
+        // TOKEN = tk.getToken()
+        // throw new Error(`Syntax Error, Expected a WORD but got ${tk.Tokenizer[TOKEN]}`);
     }
 }
+function HitEOFAtter() {
+    // console.log('RUNNING');
+    const res = TOKEN === tk.Tokenizer['SELF_CLOSE_TAG'] || TOKEN === tk.Tokenizer['RIGHT_ANGLE'];
+    if (TOKEN === tk.Tokenizer['SELF_CLOSE_TAG']) {
+        // console.log('f');
+        isSelfClose = true;
+    }
+    // console.log('EOF ATTER: = ' , tk.Tokenizer[TOKEN]);
+    return res;
+}
 function NORMAL_ATTRS() {
-    const HitEOFAtter = () => {
-        const res = TOKEN == tk.Tokenizer['SELF_CLOSE_TAG'] || TOKEN == tk.Tokenizer['RIGHT_ANGLE'];
-        //  //  console.log("HitEOFAtter " , res);
-        return res;
-    };
-    while (!(HitEOFAtter())) {
+    // const HitEOFAtter = () => {
+    //     const res = TOKEN === tk.Tokenizer['SELF_CLOSE_TAG'] || TOKEN === tk.Tokenizer['RIGHT_ANGLE'];
+    //     if (TOKEN ===tk.Tokenizer['SELF_CLOSE_TAG']){
+    //         console.log('f');
+    //         isSelfClose = true;
+    //     }
+    //     //  //  console.log("HitEOFAtter " , res);
+    //     return res
+    // }
+    isSelfClose = false;
+    let shouldEnd = HitEOFAtter();
+    while (!shouldEnd) {
+        // console.log("N: " ,tk.valStr);
         if (tk.valStr !== "class" && tk.valStr !== "id" && TOKEN === tk.Tokenizer['WORD']) {
             exports.TOKEN = TOKEN = tk.getToken();
             NORMAL_ATTR();
@@ -169,6 +196,7 @@ function NORMAL_ATTRS() {
         else {
             break;
         }
+        shouldEnd = HitEOFAtter();
     }
 }
 function classAttr() {
@@ -267,7 +295,11 @@ function idClassAttrs() {
 function attrList() {
     var attrList = new ATTR_AST_1.ATTR_AST();
     //TOKEN = tk.getToken();
+    isSelfClose = false;
     if (TOKEN === tk.Tokenizer['RIGHT_ANGLE'] || TOKEN === tk.Tokenizer['SELF_CLOSE_TAG']) {
+        if (TOKEN === tk.Tokenizer['SELF_CLOSE_TAG']) {
+            isSelfClose = true;
+        }
         exports.TOKEN = TOKEN = tk.getToken();
         return attrList;
     }
@@ -306,17 +338,53 @@ function selfCloseTags() {
     //TOKEN = tk.getToken()
     return new HTML_AST(new HTML_Node(tagName, className, idName));
 }
+function regTag() {
+    const tagName = tk.valStr;
+    exports.TOKEN = TOKEN = tk.getToken();
+    const atterList = attrList();
+    const className = atterList.getClassName();
+    const idName = atterList.getIdName();
+    const html_ast = new HTML_AST(new HTML_Node(tagName, className, idName));
+    if (isSelfClose) {
+        if (TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG']) {
+            throw new Error(`Syntax Error,  Expected a 'SELF_CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`);
+        }
+    }
+    else {
+        const sub_ast = html();
+        html_ast.addNodes(sub_ast);
+        if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+            throw new Error(`Syntax Error,  Expected a 'CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`);
+        }
+        exports.TOKEN = TOKEN = tk.getToken();
+        if (!(tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN)) {
+            throw new Error(`Syntax Error, Expected to close with <${tagName}> but got ${tk.Tokenizer[TOKEN]} instead with value :"${tk.valStr}"`);
+        }
+        exports.TOKEN = TOKEN = tk.getToken();
+        if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+            throw new Error(`Syntax Error, Expected to close with <${tagName}> but could not find RIGHT_ANGLE TOKEN`);
+        }
+        exports.TOKEN = TOKEN = tk.getToken();
+    }
+    return html_ast;
+}
 function nonselfCloseTags() {
     const tagName = tk.valStr;
     exports.TOKEN = TOKEN = tk.getToken();
     const atterList = attrList();
-    if (!(TOKEN === tk.Tokenizer['LEFT_ANGLE'] || TOKEN === tk.Tokenizer['WORD'] || TOKEN === tk.Tokenizer['CLOSE_TAG'])) {
-        throw new Error(`Syntax Error,  Expected to find to LEFT_ANGLE or WORD or CLOSE_TAG but got ${tk.Tokenizer[TOKEN]} instead`);
-    }
+    // if (!(TOKEN === tk.Tokenizer['LEFT_ANGLE'] || TOKEN === tk.Tokenizer['WORD'] ||  TOKEN === tk.Tokenizer['OPEN_COM'] || TOKEN === tk.Tokenizer['SELF_CLOSE_TAG']) ) {
+    //     throw new Error(`Syntax Error,  Expected to find to LEFT_ANGLE or WORD or CLOSE_TAG or OPEN_COM but got ${tk.Tokenizer[TOKEN]} instead`)
+    // }
     //  //  console.log("asd f" ,tk.Tokenizer[TOKEN]);
     const className = atterList.getClassName();
     const idName = atterList.getIdName();
     const html_ast = new HTML_AST(new HTML_Node(tagName, className, idName));
+    console.log("IS SELF CLOSE: ", isSelfClose);
+    if (isSelfClose) {
+        // TOKEN = tk.getToken();  
+        // console.log('dsfsd');
+        return html_ast;
+    }
     // TAG_STACK.push(tagName);
     // TOKEN = tk.getToken()
     const html_sub_ast = html();
@@ -327,7 +395,7 @@ function nonselfCloseTags() {
     //  //  //  console.log(`${tk.Tokenizer[TOKEN]} instead`);
     exports.TOKEN = TOKEN = tk.getToken();
     if (!(tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN)) {
-        throw new Error(`Syntax Error, Expected to close with <${tagName}> but got ${tk.Tokenizer[TOKEN]} instead`);
+        throw new Error(`Syntax Error, Expected to close with <${tagName}> but got ${tk.Tokenizer[TOKEN]} instead with value :"${tk.valStr}"`);
     }
     exports.TOKEN = TOKEN = tk.getToken();
     if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
@@ -338,15 +406,18 @@ function nonselfCloseTags() {
 }
 function whatever() {
     while (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
-        exports.TOKEN = TOKEN = tk.getToken();
+        exports.TOKEN = TOKEN = tk.getJsToken();
     }
 }
 function StyleTag() {
-    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
-        throw new Error("Syntax Error, Expected to close opening style tag with RIGHT_ANGLE");
+    attrList();
+    // if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
+    //     throw new Error("Syntax Error, Expected to close opening style tag with RIGHT_ANGLE")
+    // }   
+    if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+        exports.TOKEN = TOKEN = tk.getToken();
+        whatever();
     }
-    exports.TOKEN = TOKEN = tk.getToken();
-    whatever();
     exports.TOKEN = TOKEN = tk.getToken();
     if (tk.valStr !== 'style') {
         throw new Error(`Syntax Error, Expected to close with style tag but got ${tk.valStr} tag Name instead`);
@@ -356,13 +427,19 @@ function StyleTag() {
         throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with style tag but got ${tk.Tokenizer[TOKEN]} instead.`);
     }
     exports.TOKEN = TOKEN = tk.getToken();
+    return new HTML_AST(new HTML_Node("style", null, null));
 }
 function ScriptTag() {
-    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
-        throw new Error("Syntax Error, Expected to close opening style tag with RIGHT_ANGLE");
+    // console.log(tk.valStr);
+    attrList();
+    // console.log("SC TAG: " , tk.Tokenizer[TOKEN] , tk.valStr);
+    // if (TOKEN == tk.Tokenizer['RIGHT_ANGLE']) {
+    //     throw new Error(`Syntax Error, Expected to close opening Script tag with RIGHT_ANGLE but got ${tk.Tokenizer[TOKEN]} instead`)
+    // }   
+    if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+        // TOKEN = tk.getToken()
+        whatever();
     }
-    exports.TOKEN = TOKEN = tk.getToken();
-    whatever();
     exports.TOKEN = TOKEN = tk.getToken();
     if (tk.valStr !== 'script') {
         throw new Error(`Syntax Error, Expected to close with script tag but got ${tk.valStr} tag Name instead`);
@@ -372,6 +449,7 @@ function ScriptTag() {
         throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with script tag but got ${tk.Tokenizer[TOKEN]} instead.`);
     }
     exports.TOKEN = TOKEN = tk.getToken();
+    return new HTML_AST(new HTML_Node("script", null, null));
 }
 function tag() {
     exports.TOKEN = TOKEN = tk.getToken();
@@ -379,16 +457,24 @@ function tag() {
         throw new Error("Syntax Error, Expected a tag name here");
     }
     const tagName = tk.valStr;
+    if (tagName in debugMap) {
+        debugMap[tagName] += 1;
+    }
+    else {
+        debugMap[tagName] = 1;
+    }
+    const num = debugMap[tagName];
+    console.log("TAG NAME:", tagName, ` #${num}`);
     if (SELF_CLOSE_TAG_NAMES.includes(tagName)) {
         return selfCloseTags();
     }
     else if (tagName === 'script') {
         exports.TOKEN = TOKEN = tk.getToken();
-        ScriptTag();
+        return ScriptTag();
     }
-    else if (tagName === 'sytle') {
+    else if (tagName === 'style') {
         exports.TOKEN = TOKEN = tk.getToken();
-        StyleTag();
+        return StyleTag();
     }
     else {
         return nonselfCloseTags();
@@ -404,6 +490,15 @@ function text() {
     }
     return new HTML_AST(new HTML_Node('PLAIN_TEXT', null, null));
 }
+function comment() {
+    exports.TOKEN = TOKEN = tk.getCommentToken();
+    if (TOKEN === tk.Tokenizer.EOF) {
+        throw new Error("Syntax Error, Comment was not closed");
+    }
+    else {
+        exports.TOKEN = TOKEN = tk.getToken();
+    }
+}
 function html() {
     const lst_ast = [];
     while (true) {
@@ -414,6 +509,9 @@ function html() {
         }
         else if (TOKEN === tk.Tokenizer.WORD) {
             lst_ast.push(text());
+        }
+        else if (TOKEN === tk.Tokenizer.OPEN_COM) {
+            comment();
         }
         else {
             break;
@@ -429,9 +527,6 @@ function start() {
     if (TOKEN !== tk.Tokenizer.DOCTYPE_P1) {
         throw new Error(`Syntax Error at , Exected to find "DOCTYPE_P1" token`);
     }
-    // if (tk.chr != ' ') {
-    //   throw new Error('Syntax Error, Exected to find " " character')   
-    // }
     exports.TOKEN = TOKEN = tk.getToken();
     if (tk.valStr !== 'html') {
         throw new Error('Syntax Error, Exected to find "html"  word');

@@ -4,13 +4,15 @@ start <e> :=
     (ws)* 
         html
 
-html     :=  ( tag | (ws)* | text )*
-tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags | StyleTag | ScriptTag) 
+html     :=  ( tag | (ws)* | text | comment )*
+comment  := '<!--'(ws*) junk  (ws*) '-->' 
+tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags | regTag | StyleTag | ScriptTag) 
+regTag   := tagName attrList  ( '/>' | '>' ) 
 text     := (alpahnum+ | (ws*))*
 nonSelfCloseTags := nonSelfCloseTagName<e1> attrList 
                         html 
                     '</'(ws*) nonSelfCloseTagName<e1> (ws*) '>' 
-
+tagName       := ((alpahnum)| '-')+
 selfCloseTags :=   selfCloseTagNames attrList 
 selfCloseTagNames := 'area' | 
                      'base' | 
@@ -32,9 +34,9 @@ selfCloseTagNames := 'area' |
 
 nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
 
-StyleTag      := ws*'style>'  whatever '</' (ws*) 'style' (ws*) '>'
+StyleTag      := ws*'style' attrList '>'  whatever '</' (ws*) 'style' (ws*) '>'
 
-ScriptTag     := ws*'script>' whatever '</' (ws*) 'script' (ws*)'>'
+ScriptTag     := ws*'script' attrList '>' whatever '</' (ws*) 'script' (ws*)'>'
 
 whatever      := (anyChar)* / '</'
 
@@ -43,17 +45,19 @@ attrList  := (  ('/>' | '>')  | (ws+) NORMAL_ATTRS [ firstClassThenId | firstIdT
 firstClassThenId :=  classAttr   NORMAL_ATTRS [idAttr] NORMAL_ATTRS 
 firstIdThenClass :=  idAttr  NORMAL_ATTRS [classAttr] NORMAL_ATTRS  
 
-idClassAttrs := (ws*) ((classAttr (ws*) [idAttr]) | (idAttr (ws*) [classAttr] )) (ws*)
 
+idClassAttrs := (ws*) ((classAttr (ws*) [idAttr]) | (idAttr (ws*) [classAttr] )) (ws*)
 
 NORMAL_ATTRS := (NORMAL_ATTR  (ws*))*
 NORMAL_ATTR  := attrName (ws*)['='(ws*) attrVal]
 
-
-
 keyVal    := (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*)
 JustKey   := (alpahnum)+
-attrName  := (alpahnum)+ / ('class' | 'id') 
+attrName  := (alpahnum | '-')+ / ('class' | 'id') 
+
+
+
+
 classAttr := 'class' (ws*) '=' (ws*) attrVal
 idAttr    := 'id'  (ws*) '=' (ws*) attrVal
 ws        := ' ' | '\t' | '\n'  | '\r'
