@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TestInit = exports.getCSSToken = exports.getJsToken = exports.getCommentToken = exports.getToken = exports.JumpWhiteSpace = exports.isAlphanumeric = exports.getChr = exports.isWhiteSpace = exports.col_num = exports.line_num = exports.valStr = exports.lenStr = exports.idx = exports.htmlString = exports.chr = exports.TOKEN = exports.Tokenizer = void 0;
+exports.TestInit = exports.getCSSToken = exports.getJsToken = exports.getCommentToken = exports.getToken1 = exports.getToken = exports.JumpWhiteSpace = exports.isAlphanumeric = exports.getChr = exports.isWhiteSpace = exports.col_num = exports.line_num = exports.valStr = exports.lenStr = exports.idx = exports.htmlString = exports.chr = exports.TOKEN = exports.Tokenizer = void 0;
 var debugMap = {};
 // NOTE THIS SHOULD ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
 var Tokenizer;
@@ -27,6 +27,8 @@ var Tokenizer;
     Tokenizer[Tokenizer["OPEN_COM"] = 19] = "OPEN_COM";
     Tokenizer[Tokenizer["CLOSE_COM"] = 20] = "CLOSE_COM";
     Tokenizer[Tokenizer["DASH"] = 21] = "DASH";
+    Tokenizer[Tokenizer["DOUBLE_QUOTE"] = 22] = "DOUBLE_QUOTE";
+    Tokenizer[Tokenizer["SINGLE_QUOTE"] = 23] = "SINGLE_QUOTE";
 })(Tokenizer || (exports.Tokenizer = Tokenizer = {}));
 exports.TOKEN = null;
 exports.chr = null;
@@ -48,7 +50,7 @@ function getChr() {
 }
 exports.getChr = getChr;
 function isAlphanumeric(str) {
-    return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || exports.chr === "_" || exports.chr === "@" || exports.chr === ')' || exports.chr === '(' || exports.chr === "'" || exports.chr === '?' || exports.chr === '!' || exports.chr === '-' || exports.chr === '&' || exports.chr === ',' || exports.chr === '.' || exports.chr === ';' || exports.chr === '%' || exports.chr === '#' || exports.chr === '/' || exports.chr === ':' || exports.chr === '+';
+    return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || exports.chr === "_" || exports.chr === "@" || exports.chr === ')' || exports.chr === '(' || exports.chr === '?' || exports.chr === '!' || exports.chr === '-' || exports.chr === '&' || exports.chr === ',' || exports.chr === '.' || exports.chr === ';' || exports.chr === '%' || exports.chr === '#' || exports.chr === ':' || exports.chr === '+';
 }
 exports.isAlphanumeric = isAlphanumeric;
 function JumpWhiteSpace() {
@@ -58,6 +60,119 @@ function JumpWhiteSpace() {
 }
 exports.JumpWhiteSpace = JumpWhiteSpace;
 function getToken() {
+    JumpWhiteSpace();
+    if (exports.idx === exports.lenStr + 1) {
+        return Tokenizer.EOF;
+    }
+    switch (exports.chr) {
+        case '/': {
+            exports.chr = getChr();
+            if (exports.chr === '>') {
+                exports.chr = getChr();
+                return Tokenizer.SELF_CLOSE_TAG;
+            }
+            else {
+                exports.valStr = '/';
+                while (isAlphanumeric(exports.chr)) {
+                    exports.valStr += exports.chr;
+                    exports.chr = getChr();
+                }
+                return Tokenizer.WORD;
+            }
+        }
+        case '<': {
+            exports.valStr = '<';
+            exports.chr = getChr();
+            if (exports.chr === "!") {
+                exports.valStr += exports.chr;
+                exports.chr = getChr();
+                if (exports.chr === '-') {
+                    exports.chr = getChr();
+                    if (exports.chr === '-') {
+                        exports.chr = getChr();
+                        return Tokenizer.OPEN_COM;
+                    }
+                    else {
+                        throw new Error(`TOKEN ERROR, Expected to find '<!--' but got '<!${exports.chr}' instead.`);
+                    }
+                }
+                // This will tokenize for 
+                // the beginning doctype preamble
+                while (isAlphanumeric(exports.chr)) {
+                    exports.valStr += exports.chr;
+                    exports.chr = getChr();
+                }
+                exports.valStr += exports.chr; // <--- This is here to allow for the space char
+                //      to be added 
+                if (exports.valStr !== "<!DOCTYPE " && exports.valStr !== '<!doctype ') {
+                    throw new Error(`TOKEN ERROR, Expected to find the "<!DOCTYPE " or "<!doctype " but got ${exports.valStr} instead`);
+                }
+                else {
+                    return Tokenizer.DOCTYPE_P1;
+                }
+            }
+            else if (exports.chr === '/') {
+                exports.chr = getChr();
+                return Tokenizer.CLOSE_TAG;
+            }
+            return Tokenizer.LEFT_ANGLE;
+        }
+        case '=': {
+            exports.chr = getChr();
+            return Tokenizer.EQUAL;
+        }
+        case '"': {
+            exports.chr = getChr();
+            return Tokenizer.DOUBLE_QUOTE;
+        }
+        case "'": {
+            exports.chr = getChr();
+            return Tokenizer.SINGLE_QUOTE;
+        }
+        case '>': {
+            exports.chr = getChr();
+            return Tokenizer.RIGHT_ANGLE;
+        }
+        default: {
+            break;
+        }
+    }
+    if (isAlphanumeric(exports.chr)) {
+        exports.valStr = exports.chr;
+        exports.chr = getChr();
+        while (isAlphanumeric(exports.chr) && exports.chr !== undefined) {
+            if (exports.chr === '-') {
+                exports.chr = getChr();
+                if (exports.chr !== '-') {
+                    if (exports.idx === exports.lenStr) {
+                        return Tokenizer.BAD_TOKEN;
+                    }
+                    exports.valStr += '-';
+                    continue;
+                }
+                exports.chr = getChr();
+                if (exports.chr !== '>') {
+                    if (exports.idx === exports.lenStr) {
+                        return Tokenizer.WORD;
+                    }
+                    exports.valStr += '--';
+                    continue;
+                }
+                return Tokenizer.CLOSE_COM;
+            }
+            exports.valStr += exports.chr;
+            if (exports.idx === exports.lenStr) {
+                return Tokenizer.WORD;
+            }
+            exports.chr = getChr();
+        }
+        return Tokenizer.WORD;
+    }
+    exports.chr = getChr();
+    return Tokenizer.BAD_TOKEN;
+}
+exports.getToken = getToken;
+function getToken1() {
     JumpWhiteSpace();
     if (exports.idx === exports.lenStr + 1) {
         return Tokenizer.EOF;
@@ -182,7 +297,7 @@ function getToken() {
     //     return Tokenizer.WS;
     // }   
 }
-exports.getToken = getToken;
+exports.getToken1 = getToken1;
 function getCommentToken() {
     while (true) {
         if (exports.chr == '-') {

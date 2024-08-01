@@ -25,6 +25,10 @@ export enum Tokenizer{
     OPEN_COM   ,  // This token matches on '<!--'
     CLOSE_COM  ,  // This token matches on '-->'
     DASH       ,  // This token matches on '-'
+
+    DOUBLE_QUOTE, // This token matches on '"'
+    SINGLE_QUOTE , // This token matches on "'"
+
 }
 
 export var TOKEN:Tokenizer | undefined  = null;
@@ -54,7 +58,7 @@ export function getChr():string {
 
 
 export function isAlphanumeric(str:string | undefined) {
-  return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr === "'"|| chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#' || chr === '/' || chr === ':'  || chr === '+' ;
+  return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
 }
 
 
@@ -67,8 +71,167 @@ export function JumpWhiteSpace(): void{
     }
 }
 
+export function getToken(): Tokenizer{
 
-export function getToken(): Tokenizer  {
+
+    JumpWhiteSpace();
+
+    if(idx === lenStr + 1){
+        return Tokenizer.EOF;
+    }
+
+
+    switch(chr){
+        case '/':{                        
+            chr = getChr()
+            if(chr === '>'){
+                chr = getChr();
+                return Tokenizer.SELF_CLOSE_TAG;
+            }else{
+                valStr = '/';
+                while(isAlphanumeric(chr)){
+                    valStr += chr;
+
+                    chr = getChr();
+
+                }
+                return Tokenizer.WORD;
+            }
+
+        }
+        case '<' :{
+            valStr = '<'
+            chr = getChr()
+            if(chr === "!"){
+                valStr += chr;
+                chr = getChr();
+                if (chr === '-'){
+                    chr = getChr();
+
+                    if(chr === '-'){
+                        chr = getChr();
+                        return Tokenizer.OPEN_COM;
+                    }else{
+                        throw new Error(`TOKEN ERROR, Expected to find '<!--' but got '<!${chr}' instead.`)
+                    }
+
+                }  
+
+
+                // This will tokenize for 
+                // the beginning doctype preamble
+                while (isAlphanumeric(chr)){
+                    valStr += chr;
+                    chr = getChr();
+                }
+                
+
+                valStr += chr; // <--- This is here to allow for the space char
+                               //      to be added 
+                
+                
+                if(valStr !== "<!DOCTYPE " && valStr !== '<!doctype '){
+                    throw new Error(`TOKEN ERROR, Expected to find the "<!DOCTYPE " or "<!doctype " but got ${valStr} instead`)
+                }else{
+                    return Tokenizer.DOCTYPE_P1;
+                }
+
+            }else if(chr === '/'){
+                chr = getChr();
+                return Tokenizer.CLOSE_TAG;
+            }
+
+            return Tokenizer.LEFT_ANGLE;
+        }
+
+        case '=':{
+            chr = getChr();
+            return Tokenizer.EQUAL;
+        }
+        case '"':{
+            chr = getChr();   
+            return Tokenizer.DOUBLE_QUOTE;
+
+        }
+        case "'":{
+            chr = getChr();
+            return Tokenizer.SINGLE_QUOTE;
+        }
+        case '>':{
+            chr = getChr();
+            return Tokenizer.RIGHT_ANGLE;
+        }
+
+        default:{
+            break;
+        }
+
+    }
+
+    
+    if (isAlphanumeric(chr) ) {
+        valStr = chr;       
+        chr = getChr()
+
+
+        while (isAlphanumeric(chr)  && chr !== undefined) {
+            if(chr === '-'){
+                chr = getChr();
+                if(chr !== '-'){
+                    if(idx === lenStr){
+                        return Tokenizer.BAD_TOKEN;
+                    }
+                    
+                    valStr += '-'
+                    continue
+                }
+                chr = getChr()
+                if(chr !== '>'){
+
+
+                    if(idx === lenStr){
+                        return Tokenizer.WORD;
+                    }
+                    
+                    valStr += '--'
+                    continue 
+                }
+
+
+                return Tokenizer.CLOSE_COM
+
+            }
+            
+            valStr += chr;
+            if(idx === lenStr){
+                return Tokenizer.WORD;
+            }  
+
+            chr = getChr();
+
+           
+        }
+       
+        return Tokenizer.WORD;
+    }
+
+
+    chr = getChr();
+
+
+    return Tokenizer.BAD_TOKEN;
+
+
+}
+
+
+export function getToken1(): Tokenizer  {
+
+
+
+
+    
+
 
     JumpWhiteSpace()
 
