@@ -57,10 +57,11 @@ export function getChr():string {
 }
 
 
-export function isAlphanumeric(str:string | undefined) {
-  return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
-}
 
+// TODO: FIX THIS  !!!!!!
+export function isTxtChrs(str:string | undefined) {
+  return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr ==='`'|| chr ==='~' ||chr ==='$' || chr=== "*" || chr === '^' || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
+}
 
 
 export function JumpWhiteSpace(): void{
@@ -76,7 +77,7 @@ export function getToken(): Tokenizer{
 
     JumpWhiteSpace();
 
-    if(idx === lenStr + 1){
+    if(idx === lenStr + 1 ){
         return Tokenizer.EOF;
     }
 
@@ -89,7 +90,7 @@ export function getToken(): Tokenizer{
                 return Tokenizer.SELF_CLOSE_TAG;
             }else{
                 valStr = '/';
-                while(isAlphanumeric(chr)){
+                while(isTxtChrs(chr)){
                     valStr += chr;
 
                     chr = getChr();
@@ -120,7 +121,7 @@ export function getToken(): Tokenizer{
 
                 // This will tokenize for 
                 // the beginning doctype preamble
-                while (isAlphanumeric(chr)){
+                while (isTxtChrs(chr)){
                     valStr += chr;
                     chr = getChr();
                 }
@@ -169,12 +170,12 @@ export function getToken(): Tokenizer{
     }
 
     
-    if (isAlphanumeric(chr) ) {
+    if (isTxtChrs(chr) ) {
         valStr = chr;       
         chr = getChr()
 
 
-        while (isAlphanumeric(chr)  && chr !== undefined) {
+        while (isTxtChrs(chr) && chr !== undefined  ) {
             if(chr === '-'){
                 chr = getChr();
                 if(chr !== '-'){
@@ -224,231 +225,6 @@ export function getToken(): Tokenizer{
 
 }
 
-
-export function getToken1(): Tokenizer  {
-
-
-
-
-    
-
-
-    JumpWhiteSpace()
-
-    if(idx === lenStr + 1 ){
-
-        return Tokenizer.EOF;
-    }
-
-
-    if(chr === '/'){
-        chr = getChr();
-
-
-        if (chr === '>'){
-
-            chr = getChr()
-
-            return Tokenizer.SELF_CLOSE_TAG
-        }else{
-
-            while(isAlphanumeric(chr)){
-
-                chr = getChr();
-            }
-
-            return Tokenizer.WORD;
-
-        }
-    }
-
-    
-    if (chr === '<') {
-        chr = getChr()
-        if (chr === "!") {
-            
-            valStr = '<!';
-
-            chr = getChr();
-            
-            if(chr === '-'){
-
-                chr = getChr();
-
-                
-                if (chr === '-'){
-                    chr = getChr();
-                    return Tokenizer.OPEN_COM;
-
-                }else{
-
-                    throw new Error(`TOKEN ERROR, Expected to find '<!--'  but got  '<!-${chr}' instead`)
-                }
-
-            }
-
-            let isComment = false;
-            while (isAlphanumeric(chr)) {
-                
-                valStr += chr;
-                chr = getChr();
-              
-            } 
-
-            valStr += chr;
-            
-            if (valStr !== "<!DOCTYPE " && valStr !== "<!doctype "  ) {
-                throw new Error(`TOKEN ERROR, Expected to find the word '<!DOCTYPE ' but got ${valStr} instead` );
-            }else{
-                return Tokenizer.DOCTYPE_P1;
-            }
-
-
-        }else if(chr == '/')
-        {
-            chr = getChr()
-            return Tokenizer.CLOSE_TAG;
-        }
-        return Tokenizer.LEFT_ANGLE
-    }
-
-    
-
-    if (isAlphanumeric(chr) ) {
-        valStr = chr;
-       
-        chr = getChr()
-        
-        // valStr = chr;
-        while (isAlphanumeric(chr)  && chr !== undefined) {
-
-
-            if(chr === '-'){
-                chr = getChr();
-                if(chr !== '-'){
-                    if(idx === lenStr){
-                        return Tokenizer.BAD_TOKEN;
-                    }
-                    
-                    valStr += '-'
-                    continue
-                }
-                chr = getChr()
-                if(chr !== '>'){
-
-
-                    if(idx === lenStr){
-                        return Tokenizer.WORD;
-                    }
-                    
-                    valStr += '--'
-                    continue
-                }
-
-
-                return Tokenizer.CLOSE_COM
-
-            }
-            
-            valStr += chr;
-            if(idx === lenStr){
-                return Tokenizer.WORD;
-            }  
-
-            chr = getChr();
-
-           
-        }
-       
-        return Tokenizer.WORD;
-    }
-
-
-
-    if (chr == '>') {
-        
-        chr = getChr()
-        return Tokenizer.RIGHT_ANGLE;
-        
-    }
-
-
-    if (chr == '/'){
-
-        chr = getChr()
- 
-        if (chr == '>') {
-
-            chr = getChr();
-            return Tokenizer.SELF_CLOSE_TAG;
-            
-        }
-
-
-        throw new Error(`TOKEN ERROR, Expected a '>' but got ${chr} instead`)
-    }
-
-
-    if (chr == '='){
-        chr = getChr();
-        return Tokenizer.EQUAL
-    }
-
-
-    if (chr == '"' || chr == "'"){
-
-
-        const Quote = chr;
-
-        chr = getChr();
-        valStr = '';
-        while (chr !== Quote ){
-            
-            if (idx == lenStr) {
-                
-                throw new Error('Reached END OF FILE before quote was finished')
-            }
-
-            valStr += chr;
-            chr = getChr()
-        }
-        
-        chr = getChr()
-        return Tokenizer.QUOTED_WORD;
-    }
-     
-
-    
-    
-    chr = getChr()
-    return Tokenizer.BAD_TOKEN;
-
-    
-  
-
-    
-    //console.log(chr.charCodeAt(0), "\n".charCodeAt(0));
-    // if(chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r'){
-
-    //     chr = getChr();
-
-     
-        
-    //     while (chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r') {
-    //         chr = getChr();            
-            
-    //     }
-
-
-    //     return Tokenizer.WS;
-
-    // }   
-
-
-
-
-
-}
 
 
 

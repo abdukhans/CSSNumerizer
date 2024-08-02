@@ -211,32 +211,33 @@ function isNotEndOfFile(){
 
 function atterVal():string{
 
-    if (TOKEN === tk.Tokenizer['QUOTED_WORD']) {
-        // throw new Error("Syntax Error,Expected a qouted word")        
-    }else if(TOKEN === tk.Tokenizer['WORD']){
+    const Quote = TOKEN;
 
-        
+    if (Quote!== tk.Tokenizer.DOUBLE_QUOTE && Quote!== tk.Tokenizer.SINGLE_QUOTE) {
+        throw new Error(`Syntax Error, Expected a SINGLE_QUOTE or DOUBLE_QUOTE token but got ${TOKEN} instead`)
     }
 
 
-    const val = tk.valStr;
+    TOKEN = tk.getToken();
 
+
+
+    var val = '';
+    while (TOKEN !== Quote) {
+        if (TOKEN === tk.Tokenizer.WORD) {
+            val += tk.valStr + ' ';
+        }
+        
+        TOKEN = tk.getToken();
+    }
+
+    
     TOKEN = tk.getToken();
     return val;
 
 
 }
 
-
-function alphanum(){
-
-
-
-
-
-    
-
-}
 
 function atterName():string{
 
@@ -681,7 +682,9 @@ function regTag():HTML_AST{
 
     
 }
-
+// This will match all non self closing tags
+// If they do close on themselves then this
+// 
 function nonselfCloseTags():HTML_AST{
 
     const tagName = tk.valStr;
@@ -901,17 +904,51 @@ function tag(): HTML_AST {
 }
 
 
-function isAlphanumeric(str:string){
-    return /^[a-zA-Z0-9]+$/.test(str)
+const MISC_CHARS =[  '/',
+             '\\',
+             '+',
+             '@',
+             '#',
+             '"',
+             "'",
+             "`",
+             '~',
+             '-',
+             '_',
+             '?',
+             '&',
+             '^',
+             '+',
+             '{',
+             '}',
+             '[',
+             ']',
+             '=',
+             '$',
+             ];
+
+function mics(){
+
+    TOKEN = tk.getToken();
+
 }
 
 
+
+const FIRST_SET_TEXT = [tk.Tokenizer.WORD, 
+                        tk.Tokenizer.SINGLE_QUOTE,
+                        tk.Tokenizer.DOUBLE_QUOTE,
+                        tk.Tokenizer.RIGHT_ANGLE,
+                        tk.Tokenizer.EQUAL]
 function text(): HTML_AST{
 
     TOKEN = tk.getToken()
-    while (TOKEN === tk.Tokenizer.WORD ) {
-      TOKEN = tk.getToken()   
 
+
+
+    while (FIRST_SET_TEXT.includes(TOKEN)) {
+      
+      TOKEN = tk.getToken()   
     }
 
     return new HTML_AST(new HTML_Node('PLAIN_TEXT', null,null));    
@@ -943,11 +980,12 @@ function html(): HTML_AST[] {
 
     while (true) {
 
+    
         // TOKEN = tk.getToken();
         //  //  //  console.log("HTML: " ,tk.Tokenizer[TOKEN]);
         if (TOKEN === tk.Tokenizer.LEFT_ANGLE) {
             lst_ast.push(tag())
-        }else if(TOKEN === tk.Tokenizer.WORD){
+        }else if(FIRST_SET_TEXT.includes(TOKEN)){
             lst_ast.push(text());
         }else if (TOKEN === tk.Tokenizer.OPEN_COM){
             comment();
@@ -956,17 +994,6 @@ function html(): HTML_AST[] {
             break;
             
         }
-
-
-
-       
-        
-        
-
-     
-        
-    
-
     }
 
 
@@ -1006,7 +1033,7 @@ function start(): HTML_AST{
 
 
     const DOCTYPE_node = new HTML_Node('!DOCTYPE',null,null);
-    const DOCTYPE_AST = new HTML_AST(DOCTYPE_node);
+    const DOCTYPE_AST  = new HTML_AST(DOCTYPE_node);
     ast.addNode(DOCTYPE_AST);
 
     TOKEN = tk.getToken()

@@ -5,14 +5,30 @@ start <e> :=
         html
 
 html     :=  ( tag | (ws)* | text | comment )*
-comment  := '<!--'(ws*) junk  (ws*) '-->' 
-tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags | regTag | StyleTag | ScriptTag) 
-regTag   := tagName attrList  ( '/>' | '>' ) 
-text     := (alpahnum+ | (ws*))*
+comment  := '<!--'(ws*) text  (ws*) '-->' 
+tag      :=  '<' (ws*) (selfCloseTags | nonSelfCloseTags  | StyleTag | ScriptTag) 
+text     := (  mics+ | txtChrs+ | (ws*))*
+mics     :=  '/'| 
+             '\'|
+             '+'|
+             '@'|
+             '#'|
+             '"'|
+             "'"|
+             "`"|
+             '~'|
+             '-'|
+             '_'|
+             '?'|
+             '&'|
+             '^'|
+             '>'|
+             
+
 nonSelfCloseTags := nonSelfCloseTagName<e1> attrList 
                         html 
                     '</'(ws*) nonSelfCloseTagName<e1> (ws*) '>' 
-tagName       := ((alpahnum)| '-')+
+tagName       := ((txtChrs)| '-')+
 selfCloseTags :=   selfCloseTagNames attrList 
 selfCloseTagNames := 'area' | 
                      'base' | 
@@ -32,13 +48,13 @@ selfCloseTagNames := 'area' |
                      'menuitem' |
                      'frame'   |
 
-nonSelfCloseTagName := (alpahnum)+ / selfCloseTagNames
+nonSelfCloseTagName := (txtChrs)+ / selfCloseTagNames
 
 StyleTag      := ws*'style' attrList '>'  whatever '</' (ws*) 'style' (ws*) '>'
 
 ScriptTag     := ws*'script' attrList '>' whatever '</' (ws*) 'script' (ws*)'>'
 
-whatever      := (anyChar)* / '</'
+whatever      := (.)* / '</'
 
 attrList  := (  ('/>' | '>')  | (ws+) NORMAL_ATTRS [ firstClassThenId | firstIdThenClass ] ('/>' | '>') ) 
 
@@ -52,14 +68,14 @@ NORMAL_ATTRS := (NORMAL_ATTR  (ws*))*
 NORMAL_ATTR  := attrName (ws*)['='(ws*) attrVal]
 
 keyVal    := (attrName | classAttr | idAttr )(ws*) '=' (ws*) attrVal (ws*)
-JustKey   := (alpahnum)+
-attrName  := (alpahnum | '-')+ / ('class' | 'id') 
+JustKey   := (txtChrs)+
+attrName  := (txtChrs | '-')+ / ('class' | 'id') 
 
-
-
+txtChrs   := alpahnum | mics
 
 classAttr := 'class' (ws*) '=' (ws*) attrVal
 idAttr    := 'id'  (ws*) '=' (ws*) attrVal
 ws        := ' ' | '\t' | '\n'  | '\r'
-attrVal   := '"'((ws*)alpahnum+ [(ws+) alpahnum* (ws*)])+'"' 
-attrId    := ('"' (ws*) alpahnum+ (ws*) '"')
+attrVal   := ('"'(.* / '"') '"' | "'" (.* / "'")  "'")
+attrId    := ('"' (ws*) txtChrs+ (ws*) '"')
+
