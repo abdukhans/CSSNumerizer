@@ -25,7 +25,6 @@ export enum Tokenizer{
     OPEN_COM   ,  // This token matches on '<!--'
     CLOSE_COM  ,  // This token matches on '-->'
     DASH       ,  // This token matches on '-'
-
     DOUBLE_QUOTE, // This token matches on '"'
     SINGLE_QUOTE , // This token matches on "'"
 
@@ -59,16 +58,20 @@ export function getChr():string {
 
 
 // TODO: FIX THIS  !!!!!!
-export function isTxtChrs(str:string | undefined) {
-  return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr ==='`'|| chr ==='~' ||chr ==='$' || chr=== "*" || chr === '^' || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
+// export function isTxtChrs(str:string | undefined) {
+//   return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr ==='�' || chr === '|' || chr ==='`'|| chr ==='~' ||chr ==='$' || chr=== "*" || chr === '^' || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
+// }
+const notTextChar= 
+    ['>','<', '"',"'", '/', "=" ," ","\n","\t","\r" ];
+export function isTxtChrs(str:string | undefined){
+    return !(notTextChar.includes(str)) && chr !== null;
 }
-
 
 export function JumpWhiteSpace(): void{
 
     while (isWhiteSpace(chr)) {
         
-        chr = getChr();
+        chr = getChr(); 
     }
 }
 

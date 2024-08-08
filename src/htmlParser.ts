@@ -213,8 +213,17 @@ function atterVal():string{
 
     const Quote = TOKEN;
 
-    if (Quote!== tk.Tokenizer.DOUBLE_QUOTE && Quote!== tk.Tokenizer.SINGLE_QUOTE) {
+    if (Quote!== tk.Tokenizer.DOUBLE_QUOTE && Quote!== tk.Tokenizer.SINGLE_QUOTE && Quote!== tk.Tokenizer.WORD) {
         throw new Error(`Syntax Error, Expected a SINGLE_QUOTE or DOUBLE_QUOTE token but got ${TOKEN} instead`)
+    }
+
+
+   
+
+    if(TOKEN === tk.Tokenizer.WORD){
+
+        // TOKEN = getToken();
+        return tk.valStr;
     }
 
 
@@ -433,9 +442,8 @@ function firstIdThenClass():ATTR_AST{
     NORMAL_ATTRS();
 
     if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] &&  TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG'] ) {        
-        throw new Error(`Syntax Error, Cannot have multiple class or id tags got ${Tokenizer[TOKEN]} instread `)
+        throw new Error(`Syntax Error, Cannot have multiple class or id tags got ${Tokenizer[TOKEN]} instead `)
     }
-
 
     return attrList;
 }
@@ -717,7 +725,9 @@ function nonselfCloseTags():HTML_AST{
 
 
     console.log("IS SELF CLOSE: " , isSelfClose);
-    
+
+
+
     if (isSelfClose){
         // TOKEN = tk.getToken();  
 
@@ -736,7 +746,7 @@ function nonselfCloseTags():HTML_AST{
 
     // if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
     //     throw new Error(`Syntax Error,  Expected a 'CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`)
-    // }
+    // }  
 
 
     //  //  //  console.log(`${tk.Tokenizer[TOKEN]} instead`);
@@ -745,9 +755,22 @@ function nonselfCloseTags():HTML_AST{
 
     TOKEN  = tk.getToken();
 
-    if (!( tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN  )) {
+    while(!( tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN  )) {
          
-        throw new Error(`Syntax Error, Expected to close with <${tagName}> but got ${tk.Tokenizer[TOKEN]} instead with value :"${tk.valStr}"`)
+        console.log("ERROR DECTECTED");
+        
+
+
+
+        if (TOKEN !== tk.Tokenizer.CLOSE_TAG) {
+            html_ast.addNodes(html());
+
+        }else{
+            TOKEN = tk.getToken();
+        }
+
+
+        
         
     }
 
@@ -767,8 +790,6 @@ function nonselfCloseTags():HTML_AST{
 
 
 function whatever(){
-
-
     while(TOKEN !== tk.Tokenizer['CLOSE_TAG']){
         TOKEN = tk.getJsToken(); 
     }
@@ -855,7 +876,7 @@ function tag(): HTML_AST {
 
 
     TOKEN = tk.getToken();
-
+    
     
 
 
@@ -865,7 +886,7 @@ function tag(): HTML_AST {
 
     const tagName = tk.valStr;
 
-    
+
     if (tagName in debugMap){
 
         debugMap[tagName] += 1

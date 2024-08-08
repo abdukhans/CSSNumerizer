@@ -115,8 +115,12 @@ function isNotEndOfFile() {
 }
 function atterVal() {
     const Quote = TOKEN;
-    if (Quote !== tk.Tokenizer.DOUBLE_QUOTE && Quote !== tk.Tokenizer.SINGLE_QUOTE) {
+    if (Quote !== tk.Tokenizer.DOUBLE_QUOTE && Quote !== tk.Tokenizer.SINGLE_QUOTE && Quote !== tk.Tokenizer.WORD) {
         throw new Error(`Syntax Error, Expected a SINGLE_QUOTE or DOUBLE_QUOTE token but got ${TOKEN} instead`);
+    }
+    if (TOKEN === tk.Tokenizer.WORD) {
+        // TOKEN = getToken();
+        return tk.valStr;
     }
     exports.TOKEN = TOKEN = tk.getToken();
     var val = '';
@@ -235,7 +239,7 @@ function firstIdThenClass() {
     }
     NORMAL_ATTRS();
     if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] && TOKEN !== tk.Tokenizer['SELF_CLOSE_TAG']) {
-        throw new Error(`Syntax Error, Cannot have multiple class or id tags got ${Tokenizer[TOKEN]} instread `);
+        throw new Error(`Syntax Error, Cannot have multiple class or id tags got ${Tokenizer[TOKEN]} instead `);
     }
     return attrList;
 }
@@ -398,11 +402,17 @@ function nonselfCloseTags() {
     html_ast.addNodes(html_sub_ast);
     // if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
     //     throw new Error(`Syntax Error,  Expected a 'CLOSE_TAG' but got ${tk.Tokenizer[TOKEN]} instead`)
-    // }
+    // }  
     //  //  //  console.log(`${tk.Tokenizer[TOKEN]} instead`);
     exports.TOKEN = TOKEN = tk.getToken();
-    if (!(tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN)) {
-        throw new Error(`Syntax Error, Expected to close with <${tagName}> but got ${tk.Tokenizer[TOKEN]} instead with value :"${tk.valStr}"`);
+    while (!(tk.valStr === tagName && tk.Tokenizer['WORD'] === TOKEN)) {
+        console.log("ERROR DECTECTED");
+        if (TOKEN !== tk.Tokenizer.CLOSE_TAG) {
+            html_ast.addNodes(html());
+        }
+        else {
+            exports.TOKEN = TOKEN = tk.getToken();
+        }
     }
     exports.TOKEN = TOKEN = tk.getToken();
     if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {

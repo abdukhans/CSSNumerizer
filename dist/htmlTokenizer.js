@@ -50,8 +50,12 @@ function getChr() {
 }
 exports.getChr = getChr;
 // TODO: FIX THIS  !!!!!!
+// export function isTxtChrs(str:string | undefined) {
+//   return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr ==='�' || chr === '|' || chr ==='`'|| chr ==='~' ||chr ==='$' || chr=== "*" || chr === '^' || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
+// }
+const notTextChar = ['>', '<', '"', "'", '/', "=", " ", "\n", "\t", "\r"];
 function isTxtChrs(str) {
-    return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || exports.chr === '`' || exports.chr === '~' || exports.chr === '$' || exports.chr === "*" || exports.chr === '^' || exports.chr === "_" || exports.chr === "@" || exports.chr === ')' || exports.chr === '(' || exports.chr === '?' || exports.chr === '!' || exports.chr === '-' || exports.chr === '&' || exports.chr === ',' || exports.chr === '.' || exports.chr === ';' || exports.chr === '%' || exports.chr === '#' || exports.chr === ':' || exports.chr === '+';
+    return !(notTextChar.includes(str)) && exports.chr !== null;
 }
 exports.isTxtChrs = isTxtChrs;
 function JumpWhiteSpace() {
