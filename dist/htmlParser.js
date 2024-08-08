@@ -421,9 +421,20 @@ function nonselfCloseTags() {
     exports.TOKEN = TOKEN = tk.getToken();
     return html_ast;
 }
-function whatever() {
-    while (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
-        exports.TOKEN = TOKEN = tk.getJsToken();
+function whatever(escapeTagName) {
+    while (TOKEN !== tk.Tokenizer.EOF) {
+        while (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
+            exports.TOKEN = TOKEN = tk.getJsToken();
+        }
+        exports.TOKEN = TOKEN = tk.getToken();
+        if (TOKEN === tk.Tokenizer.WORD && tk.valStr === escapeTagName) {
+            exports.TOKEN = TOKEN = tk.getToken();
+            if (TOKEN !== tk.Tokenizer.RIGHT_ANGLE) {
+                throw new Error(`Syntax Error, Expected a "RIGHT_ANGLE" token but got ${tk.Tokenizer[TOKEN]} instead`);
+            }
+            exports.TOKEN = TOKEN = tk.getToken();
+            break;
+        }
     }
 }
 function StyleTag() {
@@ -431,19 +442,20 @@ function StyleTag() {
     // if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
     //     throw new Error("Syntax Error, Expected to close opening style tag with RIGHT_ANGLE")
     // }   
-    if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
-        exports.TOKEN = TOKEN = tk.getToken();
-        whatever();
-    }
-    exports.TOKEN = TOKEN = tk.getToken();
-    if (tk.valStr !== 'style') {
-        throw new Error(`Syntax Error, Expected to close with style tag but got ${tk.valStr} tag Name instead`);
-    }
-    exports.TOKEN = TOKEN = tk.getToken();
-    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
-        throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with style tag but got ${tk.Tokenizer[TOKEN]} instead.`);
-    }
-    exports.TOKEN = TOKEN = tk.getToken();
+    // if(TOKEN !== tk.Tokenizer['CLOSE_TAG']){
+    //     TOKEN = tk.getToken()
+    //     whatever('style')
+    // }
+    // TOKEN = tk.getToken();
+    // if(tk.valStr !== 'style'){
+    //     throw new Error(`Syntax Error, Expected to close with style tag but got ${tk.valStr} tag Name instead`)
+    // }
+    // TOKEN = tk.getToken();
+    // if(TOKEN !== tk.Tokenizer['RIGHT_ANGLE'] ){
+    //     throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with style tag but got ${tk.Tokenizer[TOKEN]} instead.`)        
+    // }
+    // TOKEN = tk.getToken()
+    whatever('style');
     return new HTML_AST(new HTML_Node("style", null, null));
 }
 function ScriptTag() {
@@ -453,19 +465,8 @@ function ScriptTag() {
     // if (TOKEN == tk.Tokenizer['RIGHT_ANGLE']) {
     //     throw new Error(`Syntax Error, Expected to close opening Script tag with RIGHT_ANGLE but got ${tk.Tokenizer[TOKEN]} instead`)
     // }   
-    if (TOKEN !== tk.Tokenizer['CLOSE_TAG']) {
-        // TOKEN = tk.getToken()
-        whatever();
-    }
-    exports.TOKEN = TOKEN = tk.getToken();
-    if (tk.valStr !== 'script') {
-        throw new Error(`Syntax Error, Expected to close with script tag but got ${tk.valStr} tag Name instead`);
-    }
-    exports.TOKEN = TOKEN = tk.getToken();
-    if (TOKEN !== tk.Tokenizer['RIGHT_ANGLE']) {
-        throw new Error(`Syntax Error, Expected RIGHT_ANGLE token in closing with script tag but got ${tk.Tokenizer[TOKEN]} instead.`);
-    }
-    exports.TOKEN = TOKEN = tk.getToken();
+    // TOKEN = tk.getToken()
+    whatever('script');
     return new HTML_AST(new HTML_Node("script", null, null));
 }
 function tag() {
