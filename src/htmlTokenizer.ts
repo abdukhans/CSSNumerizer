@@ -1,12 +1,11 @@
-import { tk } from "./htmlParser";
 var debugMap = {}
 
 // NOTE THIS SHOULD ALWAYS MATCH THE TOKEN WITH GREATEST LENGTH
-export enum Tokenizer{
+export  enum Token{
     DOCTYPE_P1   ,     // '<!DOCTYPE '
     LEFT_ANGLE ,    // '<'
     RIGHT_ANGLE,    // '>'
-    SELF_CLOSE_TAG , // '/>' 
+    SELF_CLOSE_TAG ,     // '/>' 
     CLOSE_TAG      ,    // '</'
     EQUAL          ,    // '='
     QUOTED_WORD    ,  //  (("'" (anyChar / "'") "'") | ('"' (anyChar / '"') '"')  ) 
@@ -30,285 +29,279 @@ export enum Tokenizer{
 
 }
 
-export var TOKEN:Tokenizer | undefined  = null;
-export var chr:string | undefined = null; 
-export var htmlString: string = '';
-export var idx:number = 0;
-export var lenStr: number = 0 ;
-export var valStr:string ='';
-export var line_num = 1;
-export var col_num  = 0;
-
-export function isWhiteSpace(chr:string):boolean {
-
-    if (chr === '\n' ){
-        line_num += 1;
-    }
-
-    return chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r';
-}
-
-export function getChr():string {
-
-
-    return htmlString[idx++];
-
-}
-
-
-
-// TODO: FIX THIS  !!!!!!
-// export function isTxtChrs(str:string | undefined) {
-//   return (str !== null && /^[a-zA-Z0-9]+$/.test(str)) || chr ==='�' || chr === '|' || chr ==='`'|| chr ==='~' ||chr ==='$' || chr=== "*" || chr === '^' || chr === "_"|| chr === "@"|| chr === ')' || chr === '(' || chr  === '?'|| chr === '!' || chr === '-' || chr === '&' || chr === ','  ||chr === '.'  || chr === ';' || chr === '%' || chr === '#'  || chr === ':'  || chr === '+' ;
-// }
 const notTextChar= 
     ['>','<', '"',"'", '/', "=" ," ","\n","\t","\r" ];
-export function isTxtChrs(str:string | undefined){
-    return !(notTextChar.includes(str)) && chr !== null;
-}
+export class Tokenizer{
 
-export function JumpWhiteSpace(): void{
 
-    while (isWhiteSpace(chr)) {
+
+    TOKEN:Token | undefined  = null;
+    chr:string | undefined = null; 
+    htmlString: string = '';
+    idx:number = 0;
+    lenStr: number = 0 ;
+    valStr:string ='';
+    line_num = 1;
+    col_num  = 0
+
+    constructor(){
         
-        chr = getChr(); 
+
+        this.TOKEN  = null;
+        this.idx = 0;
+    
+        this.lenStr= 0 ;
+        this.valStr =''; 
+    
+        this.htmlString ;
+
+        this.lenStr = this.htmlString.length;
+
+        this.chr = this.getChr(); 
+
+
     }
-}
-
-export function getToken(): Tokenizer{
 
 
-    JumpWhiteSpace();
+    public Init(html:string){
+        this.TOKEN  = null;
+        this.idx = 0;
+    
+        this.lenStr= 0 ;
+        this.valStr =html; 
+    
+        this.htmlString = html ;
 
-    if(idx === lenStr + 1 ){
-        return Tokenizer.EOF;
-    }
+        this.lenStr = this.htmlString.length;
 
-
-    switch(chr){
-        case '/':{                        
-            chr = getChr()
-            if(chr === '>'){
-                chr = getChr();
-                return Tokenizer.SELF_CLOSE_TAG;
-            }else{
-                valStr = '/';
-                while(isTxtChrs(chr)){
-                    valStr += chr;
-
-                    chr = getChr();
-
-                }
-                return Tokenizer.WORD;
-            }
-
-        }
-        case '<' :{
-            valStr = '<'
-            chr = getChr()
-            if(chr === "!"){
-                valStr += chr;
-                chr = getChr();
-                if (chr === '-'){
-                    chr = getChr();
-
-                    if(chr === '-'){
-                        chr = getChr();
-                        return Tokenizer.OPEN_COM;
-                    }else{
-                        throw new Error(`TOKEN ERROR, Expected to find '<!--' but got '<!${chr}' instead.`)
-                    }
-
-                }  
-
-
-                // This will tokenize for 
-                // the beginning doctype preamble
-                while (isTxtChrs(chr)){
-                    valStr += chr;
-                    chr = getChr();
-                }
-                
-
-                valStr += chr; // <--- This is here to allow for the space char
-                               //      to be added 
-                
-                
-                if(valStr !== "<!DOCTYPE " && valStr !== '<!doctype '){
-                    throw new Error(`TOKEN ERROR, Expected to find the "<!DOCTYPE " or "<!doctype " but got ${valStr} instead`)
-                }else{
-                    return Tokenizer.DOCTYPE_P1;
-                }
-
-            }else if(chr === '/'){
-                chr = getChr();
-                return Tokenizer.CLOSE_TAG;
-            }
-
-            return Tokenizer.LEFT_ANGLE;
-        }
-
-        case '=':{
-            chr = getChr();
-            return Tokenizer.EQUAL;
-        }
-        case '"':{
-            chr = getChr();   
-            return Tokenizer.DOUBLE_QUOTE;
-
-        }
-        case "'":{
-            chr = getChr();
-            return Tokenizer.SINGLE_QUOTE;
-        }
-        case '>':{
-            chr = getChr();
-            return Tokenizer.RIGHT_ANGLE;
-        }
-
-        default:{
-            break;
-        }
-
+        this.chr = this.getChr(); 
+        
+        
     }
 
     
-    if (isTxtChrs(chr) ) {
-        valStr = chr;       
-        chr = getChr()
+    isWhiteSpace(chr: string) {
+            
+        if (chr === '\n' ){
+            this.line_num += 1;
+        }
+
+        return chr === " " || chr === "\n" || chr ===  "\t" || chr === '\r';
+       
+    }
+
+    public getChr():string{
+        return this.htmlString[this.idx++];
+
+    }
+
+    JumpWhiteSpace(){
+        while (this.isWhiteSpace(this.chr)) {
+        
+            this.chr = this.getChr(); 
+        }   
+
+    }
 
 
-        while (isTxtChrs(chr) && chr !== undefined  ) {
-            if(chr === '-'){
-                chr = getChr();
-                if(chr !== '-'){
-                    if(idx === lenStr){
-                        return Tokenizer.BAD_TOKEN;
+    isTxtChrs(str:string | undefined){
+        return !(notTextChar.includes(str)) && str !== null;
+
+    }
+    public getToken(): Token{
+
+
+        this.JumpWhiteSpace();
+
+        if(this.idx === this.lenStr + 1 ){
+            return Token.EOF;
+        }
+
+
+        switch(this.chr){
+            case '/':{                        
+                this.chr = this.getChr()
+                if(this.chr=== '>'){
+                    this.chr= this.getChr();
+                    return Token.SELF_CLOSE_TAG;
+                }else{
+                    this.valStr = '/';
+                    while(this.isTxtChrs(this.chr)){
+                       this.valStr += this.chr
+
+                        this.chr= this.getChr()
+
                     }
-                    
-                    valStr += '-'
-                    continue
+                    return Token.WORD;
                 }
-                chr = getChr()
-                if(chr !== '>'){
-
-
-                    if(idx === lenStr){
-                        return Tokenizer.WORD;
-                    }
-                    
-                    valStr += '--'
-                    continue 
-                }
-
-
-                return Tokenizer.CLOSE_COM
 
             }
+            case '<' :{
+               this.valStr = '<'
+                this.chr= this.getChr()
+    
+                if(this.chr=== "!"){
+                   this.valStr += this.chr
+                    this.chr= this.getChr();
+                    if (this.chr=== '-'){
+                        this.chr= this.getChr();
+
+                        if(this.chr=== '-'){
+                            this.chr= this.getChr();
+                            return Token.OPEN_COM;
+                        }else{
+                            throw new Error(`TOKEN ERROR, Expected to find '<!--' but got '<!${this.chr}' instead.`)
+                        }
+
+                    }  
+
+
+                    // This will tokenize for 
+                    // the beginning doctype preamble
+                    while (this.isTxtChrs(this.chr)){
+                       this.valStr += this.chr
+                        this.chr= this.getChr();
+                    }
+                    
+
+                   this.valStr += this.chr // <--- This is here to allow for the space char
+                                //      to be added 
+                    
+                    
+                    if(this.valStr !== "<!DOCTYPE " &&this.valStr !== '<!doctype '){
+                        throw new Error(`TOKEN ERROR, Expected to find the "<!DOCTYPE " or "<!doctype " but got ${this.valStr} instead`)
+                    }else{
+                        return Token.DOCTYPE_P1;
+                    }
+
+                }else if(this.chr=== '/'){
+                    this.chr= this.getChr();
+                    return Token.CLOSE_TAG;
+                }
+
+                return Token.LEFT_ANGLE;
+            }
+
+            case '=':{
+                this.chr= this.getChr();
+                return Token.EQUAL;
+            }
+            case '"':{
+                this.chr= this.getChr();   
+                return Token.DOUBLE_QUOTE;
+
+            }
+            case "'":{
+                this.chr= this.getChr();
+                return Token.SINGLE_QUOTE;
+            }
+            case '>':{
+                this.chr= this.getChr();
+                return Token.RIGHT_ANGLE;
+            }
+
+            default:{
+                break;
+            }
+
+        }
+
+        
+        if (this.isTxtChrs(this.chr )) {
+           this.valStr = this.chr       
+            this.chr= this.getChr()
+
+
+            while (this.isTxtChrs(this.chr ) && this.chr!== undefined  ) {
+                if(this.chr=== '-'){
+                    this.chr= this.getChr();
+                    if(this.chr!== '-'){
+                        if(this.idx === this.lenStr){
+                            return Token.BAD_TOKEN;
+                        }
+                        
+                       this.valStr += '-'
+                        continue
+                    }
+                    this.chr= this.getChr()
+                    if(this.chr!== '>'){
+
+
+                        if(this.idx === this.lenStr){
+                            return Token.WORD;
+                        }
+                        
+                       this.valStr += '--'
+                        continue 
+                    }
+
+
+                    return Token.CLOSE_COM
+
+                }
+                
+               this.valStr += this.chr
+                if(this.idx === this.lenStr){
+                    return Token.WORD;
+                }  
+
+                this.chr= this.getChr();
+
             
-            valStr += chr;
-            if(idx === lenStr){
-                return Tokenizer.WORD;
+            }
+        
+            return Token.WORD;
+        }
+
+
+        this.chr= this.getChr();
+
+
+        return Token.BAD_TOKEN;
+    }
+    getCommentToken():Token{
+
+        // TODO: FIX THIS !!!!!!!!!!!!!! make it more readable
+        while (true) {
+            if (this.chr== '-') {
+                this.chr= this.getChr()
+                if (this.chr=== '-' ){
+                    this.chr= this.getChr()
+                    if (this.chr=== '>'){
+                        this.chr= this.getChr();
+                        return Token.CLOSE_COM; 
+                    }
+                }
+                
+            }
+            
+            if(this.idx === this.lenStr){
+                break
             }  
 
-            chr = getChr();
-
-           
-        }
-       
-        return Tokenizer.WORD;
+            this.chr= this.getChr();
+        
     }
 
 
-    chr = getChr();
+    return Token.EOF;
 
 
-    return Tokenizer.BAD_TOKEN;
-
-
-}
-
-
-
-
-export function getCommentToken():Tokenizer{
-    while (true) {
-        if (chr == '-') {
-            chr = getChr()
-            if (chr === '-' ){
-                chr = getChr()
-                if (chr === '>'){
-                    chr = getChr();
-                    return Tokenizer.CLOSE_COM; 
+    }
+    getJsToken(): Token{
+    
+        if(this.chr=== '<'){
+                this.chr= this.getChr();
+                if (this.chr=== '/') {
+                    this.chr= this.getChr();
+                    return Token.CLOSE_TAG;
                 }
-            }
-            
         }
-        
-        if(idx === lenStr){
-            break
-        }  
 
-        chr = getChr();
-       
+        this.chr= this.getChr();
+            
+        return Token.JS_TOKEN;
     }
 
-
-    return Tokenizer.EOF;
-
-
 }
-
-export function getJsToken(): Tokenizer{
-   
-    if(chr === '<'){
-            chr = getChr();
-            if (chr === '/') {
-                chr = getChr();
-                return Tokenizer.CLOSE_TAG;
-            }
-    }
-
-    chr = getChr();
-        
-    return Tokenizer.JS_TOKEN;
-}
-
-
-export function getCSSToken(): Tokenizer{
-   
-    if(chr === '<'){
-            chr = getChr();
-            if (chr === '/') {
-                chr = getChr();
-                return Tokenizer.CLOSE_TAG;
-            }
-    }
-    chr = getChr();
-        
-    return Tokenizer.CSS_TOKEN;
-}
-
-
-
-export function TestInit(html:string) {
-
-
-    TOKEN  = null;
-    idx = 0;
-   
-    lenStr= 0 ;
-    valStr =''; 
- 
-    htmlString = html;
-
-    lenStr = htmlString.length;
-
-    chr = getChr(); 
-
-
-
-}
-
-
 

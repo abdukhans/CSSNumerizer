@@ -9,12 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.test_init = exports.fetch_html = exports.htmlParser = exports.htmlTokenizer = void 0;
+exports.test_init = exports.fetch_html = exports.htmlParser = exports.Token = exports.Tokenizer = void 0;
 const node_fetch_1 = require("node-fetch");
 const htmlParser = require("./htmlParser");
 exports.htmlParser = htmlParser;
-const htmlTokenizer = require("./htmlTokenizer");
-exports.htmlTokenizer = htmlTokenizer;
+const htmlTokenizer_1 = require("./htmlTokenizer");
+Object.defineProperty(exports, "Tokenizer", { enumerable: true, get: function () { return htmlTokenizer_1.Tokenizer; } });
+Object.defineProperty(exports, "Token", { enumerable: true, get: function () { return htmlTokenizer_1.Token; } });
 const fetch_html = (url) => __awaiter(void 0, void 0, void 0, function* () {
     const res = yield (0, node_fetch_1.default)(url, {
         method: "GET",

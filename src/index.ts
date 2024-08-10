@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import  * as htmlParser from './htmlParser'
-import * as htmlTokenizer from './htmlTokenizer'
+import {Tokenizer, Token } from './htmlTokenizer'
 const fetch_html = async (url:string):Promise<string>  => {
     
     const res= await fetch(url,
@@ -30,9 +30,4 @@ const test_init =async (url:string) => {
 }
 
 
-// const test_url = "http://localhost:4545/index.html"
-// fetch_html(test_url)
-
-
-
-export {htmlTokenizer,htmlParser,fetch_html,test_init}
+export {Tokenizer,Token,htmlParser,fetch_html,test_init}
