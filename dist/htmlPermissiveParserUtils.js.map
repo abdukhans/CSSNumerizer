@@ -1,1 +1,1 @@
-{"version":3,"file":"htmlPermissiveParserUtils.js","sourceRoot":"","sources":["../src/htmlPermissiveParserUtils.ts"],"names":[],"mappings":""}
+{"version":3,"file":"htmlPermissiveParserUtils.js","sourceRoot":"","sources":["../src/htmlPermissiveParserUtils.ts"],"names":[],"mappings":";;;AAGA,SAAgB,eAAe,CAAC,EAAY,EAAC,MAAc;IACvD,IAAI,KAAW,CAAE;IAEjB,OAAM,CAAC,MAAM,CAAC,QAAQ,CAAC,KAAK,CAAC,EAAC,CAAC;QAE3B,KAAK,GAAG,EAAE,CAAC,QAAQ,EAAE,CAAC;QAEtB,0CAA0C;IAG9C,CAAC;IACD,OAAO,KAAK,CAAC;AACjB,CAAC;AAZD,0CAYC"}

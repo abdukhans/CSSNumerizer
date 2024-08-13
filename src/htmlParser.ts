@@ -2,7 +2,7 @@ import {Tokenizer, Token }  from './htmlTokenizer'
 import { ATTR_AST } from './ATTR_AST';
 import { HTML_AST} from './HTML_AST';
 import {HTML_Node} from './HTML_NODE';
-
+import {SkipToNextToken} from './htmlPermissiveParserUtils'
 
 
 var TOKEN:Token;
@@ -581,12 +581,31 @@ function regTag():HTML_AST{
 
     
 }
+
+const isAlpha =  (chr)=> /[a-zA-Z]$/.test(chr);
 // This will match all non self closing tags
 // If they do close on themselves then this
 // 
 function nonselfCloseTags():HTML_AST{
 
     const tagName = tk.valStr;
+
+
+    if (!isAlpha(tagName[0])){
+        // while(!(TOKEN === Token.LEFT_ANGLE || TOKEN === Token.OPEN_COM)){
+        //     TOKEN = tk.getToken();
+        // }
+
+        // return new HTML_AST(new HTML_Node('PLAIN_TEXT',null,null))
+        // // return text();
+
+
+        TOKEN = SkipToNextToken(tk,[Token.LEFT_ANGLE,Token.OPEN_COM]);
+
+        return new HTML_AST(new HTML_Node('PLAIN_TEXT',null,null));
+    }
+
+
 
     TOKEN = tk.getToken();
 
@@ -615,7 +634,7 @@ function nonselfCloseTags():HTML_AST{
 
 
 
-    console.log("IS SELF CLOSE: " , isSelfClose);
+    // console.log("IS SELF CLOSE: " , isSelfClose);
 
 
 
@@ -648,7 +667,7 @@ function nonselfCloseTags():HTML_AST{
 
     while(!( tk.valStr === tagName && Token['WORD'] === TOKEN  )) {
          
-        console.log("ERROR DECTECTED");
+        // console.log("ERROR DECTECTED");
         
 
 
@@ -687,6 +706,7 @@ function whatever(escapeTagName:string){
 
 
         while(TOKEN !== Token['CLOSE_TAG']){
+            
             TOKEN = tk.getJsToken(); 
         
         }
@@ -790,7 +810,7 @@ function tag(): HTML_AST {
     }
     const  num  = debugMap[tagName];
 
-    console.log("TAG NAME:", tagName,` #${num}`);
+    // console.log("TAG NAME:", tagName,` #${num}`);
     
 
     if (SELF_CLOSE_TAG_NAMES.includes(tagName )){

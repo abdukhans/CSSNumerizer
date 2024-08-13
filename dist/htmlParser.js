@@ -8,6 +8,7 @@ const HTML_AST_1 = require("./HTML_AST");
 Object.defineProperty(exports, "HTML_AST", { enumerable: true, get: function () { return HTML_AST_1.HTML_AST; } });
 const HTML_NODE_1 = require("./HTML_NODE");
 Object.defineProperty(exports, "HTML_Node", { enumerable: true, get: function () { return HTML_NODE_1.HTML_Node; } });
+const htmlPermissiveParserUtils_1 = require("./htmlPermissiveParserUtils");
 var TOKEN;
 var TAG_STACK = [];
 var line_num = 0;
@@ -318,11 +319,21 @@ function regTag() {
     }
     return html_ast;
 }
+const isAlpha = (chr) => /[a-zA-Z]$/.test(chr);
 // This will match all non self closing tags
 // If they do close on themselves then this
 // 
 function nonselfCloseTags() {
     const tagName = tk.valStr;
+    if (!isAlpha(tagName[0])) {
+        // while(!(TOKEN === Token.LEFT_ANGLE || TOKEN === Token.OPEN_COM)){
+        //     TOKEN = tk.getToken();
+        // }
+        // return new HTML_AST(new HTML_Node('PLAIN_TEXT',null,null))
+        // // return text();
+        exports.TOKEN = TOKEN = (0, htmlPermissiveParserUtils_1.SkipToNextToken)(tk, [htmlTokenizer_1.Token.LEFT_ANGLE, htmlTokenizer_1.Token.OPEN_COM]);
+        return new HTML_AST_1.HTML_AST(new HTML_NODE_1.HTML_Node('PLAIN_TEXT', null, null));
+    }
     exports.TOKEN = TOKEN = tk.getToken();
     const atterList = attrList();
     // if (!(TOKEN === Token['LEFT_ANGLE'] || TOKEN === Token['WORD'] ||  TOKEN === Token['OPEN_COM'] || TOKEN === Token['SELF_CLOSE_TAG']) ) {
@@ -332,7 +343,7 @@ function nonselfCloseTags() {
     const className = atterList.getClassName();
     const idName = atterList.getIdName();
     const html_ast = new HTML_AST_1.HTML_AST(new HTML_NODE_1.HTML_Node(tagName, className, idName));
-    console.log("IS SELF CLOSE: ", isSelfClose);
+    // console.log("IS SELF CLOSE: " , isSelfClose);
     if (isSelfClose) {
         // TOKEN = tk.getToken();  
         // console.log('dsfsd');
@@ -348,7 +359,7 @@ function nonselfCloseTags() {
     //  //  //  console.log(`${Token[TOKEN]} instead`);
     exports.TOKEN = TOKEN = tk.getToken();
     while (!(tk.valStr === tagName && htmlTokenizer_1.Token['WORD'] === TOKEN)) {
-        console.log("ERROR DECTECTED");
+        // console.log("ERROR DECTECTED");
         if (TOKEN !== htmlTokenizer_1.Token.CLOSE_TAG) {
             html_ast.addNodes(html());
         }
@@ -424,7 +435,7 @@ function tag() {
         debugMap[tagName] = 1;
     }
     const num = debugMap[tagName];
-    console.log("TAG NAME:", tagName, ` #${num}`);
+    // console.log("TAG NAME:", tagName,` #${num}`);
     if (SELF_CLOSE_TAG_NAMES.includes(tagName)) {
         return selfCloseTags();
     }

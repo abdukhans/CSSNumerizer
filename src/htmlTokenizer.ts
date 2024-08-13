@@ -231,7 +231,7 @@ export class Tokenizer{
                             return Token.WORD;
                         }
                         
-                       this.valStr += '--'
+                        this.valStr += '--'
                         continue 
                     }
 
